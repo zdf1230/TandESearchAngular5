@@ -1,20 +1,126 @@
-<!--The content below is only a placeholder and can be replaced.-->
-<div style="text-align:center">
-  <h1>
-    Welcome to {{ title }}!
-  </h1>
-  <img width="300" alt="Angular Logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTAgMjUwIj4KICAgIDxwYXRoIGZpbGw9IiNERDAwMzEiIGQ9Ik0xMjUgMzBMMzEuOSA2My4ybDE0LjIgMTIzLjFMMTI1IDIzMGw3OC45LTQzLjcgMTQuMi0xMjMuMXoiIC8+CiAgICA8cGF0aCBmaWxsPSIjQzMwMDJGIiBkPSJNMTI1IDMwdjIyLjItLjFWMjMwbDc4LjktNDMuNyAxNC4yLTEyMy4xTDEyNSAzMHoiIC8+CiAgICA8cGF0aCAgZmlsbD0iI0ZGRkZGRiIgZD0iTTEyNSA1Mi4xTDY2LjggMTgyLjZoMjEuN2wxMS43LTI5LjJoNDkuNGwxMS43IDI5LjJIMTgzTDEyNSA1Mi4xem0xNyA4My4zaC0zNGwxNy00MC45IDE3IDQwLjl6IiAvPgogIDwvc3ZnPg==">
+<div class="main_border">
+  <div class="card bg-light text-dark col-12 col-sm-8 main_border">
+    <p id="title"><b> Travel and Entertainment Search </b></p>
+    <form class="search_panel" #searchForm="ngForm">
+      <div class="form-group row">
+        <span class="col-0 col-sm-1"></span>
+        <label for="keyword" class="col-sm-3 col-form-label">Keyword<span class="red_star">*</span></label>
+        <div class="col-sm-7">
+          <input #keyword type="text" class="form-control" name="keyword" ngModel (keyup)="onKeyword(keyword.value)">
+          <div class="invalid-feedback stay_left">
+            Please enter a keyword.
+          </div>
+        </div>
+      </div>
+      <div class="form-group row">
+        <span class="col-0 col-sm-1"></span>
+        <label for="category" class="col-sm-3 col-form-label">Category</label>
+        <div class="col-sm-5">
+          <select class="custom-select" name="category" [(ngModel)]="category">
+            <option value="default"> Default </option>
+            <option value="airport"> Airport </option>
+            <option value="amusement_park"> Amusement Park </option>
+            <option value="aquarium"> Aquarium </option>
+            <option value="art_gallery"> Art Gallery </option>
+            <option value="bowling_alley"> Bowling Alley </option>
+            <option value="bakery"> Bakery </option>
+            <option value="bar"> Bar </option>
+            <option value="beauty_salon"> Beauty salon </option>
+            <option value="bus_station"> Bus Station </option>
+            <option value="cafe"> Cafe </option>
+            <option value="campground"> Campground </option>
+            <option value="car_rental"> Car Rental </option>
+            <option value="casino"> Casino </option>
+            <option value="lodging"> Lodging </option>
+            <option value="movie_theater"> Movie theater </option>
+            <option value="museum"> Museum </option>
+            <option value="night_club"> Night Club </option>
+            <option value="park"> Park </option>
+            <option value="parking"> Parking </option>
+            <option value="restaurant"> Restaurant </option>
+            <option value="shopping_mall"> Shopping Mall </option>
+            <option value="stadium"> Stadium </option>
+            <option value="subway_station"> Subway Station </option>
+            <option value="taxi_stand"> Taxi Stand </option>
+            <option value="train_station"> Train Station </option>
+            <option value="transit_station"> Transit Station </option>
+            <option value="travel_agency"> Travel Agency </option>
+            <option value="zoo"> Zoo </option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group row">
+        <span class="col-0 col-sm-1"></span>
+        <label for="distance" class="col-sm-3 col-form-label">Distance (Miles)</label>
+        <div class="col-sm-5">
+          <input type="text" class="form-control" id="distance" placeholder="10" name="distance" ngModel>
+        </div>
+      </div>
+      <fieldset class="form-group">
+        <div class="row">
+          <span class="col-0 col-sm-1"></span>
+          <legend for="from" class="col-sm-3 col-form-label">From<span class="red_star">*</span></legend>
+          <div class="col-sm-7">
+            <div class="form-check stay_left">
+              <input class="form-check-input" type="radio" id="current_radio" name="from" value="current" (click)="disableLocation()" [(ngModel)]="from"/>
+              <label class="form-check-label" for="current_radio">Current Location</label>
+            </div>
+            <div class="form-check stay_left">
+              <input class="form-check-input" type="radio" id="other_radio" name="from" value="other" (click)="undisableLocation()" [(ngModel)]="from"/>
+              <div class="form-group">
+                <label class="form-check-label" for="other_radio">Other. Please specify:</label>
+                <input #location type="text" class="form-control" id="from" placeholder="Enter a Location" (keyup)="onLocation(location.value)" [disabled]="!locationStatus" name="location" [(ngModel)]="locationValue">
+                <div class="invalid-feedback stay_left">
+                    Please enter a location.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+      <div class="form-group row">
+        <span class="col-0 col-sm-1"></span>
+        <div class="col-sm-3 stay_left">
+          <button type="button" class="btn btn-primary button_border" (click)="requestPlaces(searchForm)" [disabled]="!searchButtonStatus"><i class="fas fa-search"></i> Search</button>
+          <button type="button" class="btn button_border">Clear</button>
+        </div>
+      </div>
+    </form>
+  </div>
+  <br>
+  <div>
+      <button type="button" class="btn btn-primary button_border">Results</button>
+      <button type="button" class="btn btn-link">Favorites</button>
+  </div>
+  
 </div>
-<h2>Here are some links to help you start: </h2>
-<ul>
-  <li>
-    <h2><a target="_blank" rel="noopener" href="https://angular.io/tutorial">Tour of Heroes</a></h2>
-  </li>
-  <li>
-    <h2><a target="_blank" rel="noopener" href="https://github.com/angular/angular-cli/wiki">CLI Documentation</a></h2>
-  </li>
-  <li>
-    <h2><a target="_blank" rel="noopener" href="https://blog.angular.io/">Angular blog</a></h2>
-  </li>
-</ul>
 
+<div class="main_border row" *ngIf="resultTable">
+  <table class="table table-hover table-responsive-xl" id="result_panel">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Category</th>
+        <th>Name</th>
+        <th>Address</th>
+        <th>Favorite</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let x of placesDisplay">
+        <td>{{x.number}}</td>
+        <td><img class='category_icon' src={{x.category}} /></td>
+        <td>{{x.name}}</td>
+        <td>{{x.address}}</td>
+        <td><button class='btn btn-default button_border'><i class="far fa-star"></i></button></td>
+        <td><button class='btn btn-default button_border'><i class="fas fa-chevron-right"></i></button></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<div class="main_border" *ngIf="resultTable">
+  <button class="btn btn-default button_border" (click)="onPrevious()" *ngIf="havePrevious"> Previous </button>
+  <span>&nbsp;&nbsp;&nbsp;</span>
+  <button class="btn btn-default button_border" (click)="onNext()" *ngIf="haveNext"> Next </button>
+</div>

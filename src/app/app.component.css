@@ -1,0 +1,62 @@
+.main_border {
+    text-align: center;
+    margin: auto;
+    padding: 10px;
+}
+
+#title {
+    margin-top: 10px;
+}
+
+label { 
+    text-align: left;
+    white-space: nowrap;
+}
+
+legend { 
+    text-align: left;
+    white-space: nowrap;
+}
+
+.stay_left {
+    text-align: left;
+    white-space: nowrap;
+}
+
+.search_panel {
+    width: 90%;
+    margin: auto;
+}
+
+#result_panel {
+    margin: auto;
+    width: 85%;
+}
+
+#result_panel td{
+    vertical-align: middle;
+}
+
+.red_star {
+    color: red;
+}
+
+.category_icon {
+    width: 35px;
+}
+
+.icon {
+    width: 15px;
+}
+
+.button_border {
+    border-width: 1px;
+    border-style: solid;
+    border-color: silver;
+}
+
+.stars {
+    display: inline-block;
+    position: relative;
+    font-family: FontAwesome;
+  }
