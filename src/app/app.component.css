@@ -41,6 +41,10 @@ legend {
     color: red;
 }
 
+.yellow_star {
+    color: gold;
+}
+
 .category_icon {
     width: 35px;
 }
@@ -54,9 +58,3 @@ legend {
     border-style: solid;
     border-color: silver;
 }
-
-.stars {
-    display: inline-block;
-    position: relative;
-    font-family: FontAwesome;
-  }

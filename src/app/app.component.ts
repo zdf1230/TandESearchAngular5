@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { NgForm } from '@angular/forms';
 import { AgmCoreModule, MapsAPILoader } from '@agm/core';
 import { } from 'googlemaps';
+import { element } from 'protractor';
 
 @Component({
   selector: 'app-root',
@@ -10,8 +11,9 @@ import { } from 'googlemaps';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit{
-  ipApiUrl = 'http://ip-api.com/json';
-  serverUrl = 'http://localhost:3000/';
+  private itemPerPage = 20;
+  private ipApiUrl = 'http://ip-api.com/json';
+  private serverUrl = 'http://localhost:3000/';
   error;
   currentLocation;
 
@@ -27,9 +29,17 @@ export class AppComponent implements OnInit{
   places = [];
   placesDisplay = [];
   placesDisplayIndex = 0;
-  resultTable = false;
   havePrevious = false;
   haveNext = false;
+
+  favorites = [];
+  favoritesDisplay = [];
+  favoritesDisplayIndex = 0;
+  havePreviousFavorites = false;
+  haveNextFavorites = false;
+
+  resultTable = false;
+  favoriteTable = false;
   next_page_token = '';
 
   constructor(private http: HttpClient, private renderer: Renderer2, private mapsAPILoader: MapsAPILoader, private ngZone: NgZone) {
@@ -176,6 +186,7 @@ export class AppComponent implements OnInit{
           this.haveNext = false;
         }
         this.resultTable = true;
+        this.favoriteTable = false;
       },
       error => this.error = error
     );
@@ -211,6 +222,7 @@ export class AppComponent implements OnInit{
                 category: element['icon'],
                 name: element['name'],
                 address: element['vicinity'],
+                id: element['id']
               }
             );
           });
@@ -230,5 +242,135 @@ export class AppComponent implements OnInit{
         error => this.error = error
       )
     }
+  }
+
+  onResults() {
+    this.resultTable = true;
+    this.favoriteTable = false;
+  }
+
+  onFavorites() {
+    this.resultTable = false;
+    this.favoriteTable = true;
+    if (localStorage.favorite) {
+      // it needs update only if the array favorites is empty.
+      if (this.favorites.length == 0) {
+        this.favoritesDisplayIndex = 0;
+        this.updateFavorites();
+      }
+    }
+    else {
+      //alert
+      console.log("alert");
+    }
+  }
+
+  onFavoritesPrevious() {
+    this.haveNextFavorites = true;
+    this.favoritesDisplay = this.favorites[--this.favoritesDisplayIndex];
+    if (this.favoritesDisplayIndex == 0) {
+      this.havePreviousFavorites = false;
+    }
+  }
+
+  onFavoritesNext() {
+    this.havePreviousFavorites = true;
+    this.favoritesDisplay = this.favorites[++this.favoritesDisplayIndex];
+    if (this.favoritesDisplayIndex == this.favorites.length - 1) {
+      this.haveNextFavorites = false;
+    }
+  }
+
+  updateFavorites() {
+    if (localStorage.favorite) {
+      var num = 0;
+      // delete the last element in current page(except the first page).
+      if (this.favoritesDisplayIndex > 0 
+        && this.favorites.length <= this.favoritesDisplayIndex * this.itemPerPage) {
+        --this.favoritesDisplayIndex;
+      }
+      this.favoritesDisplay = [];
+      this.favorites = [];
+      var favoritesJSON = JSON.parse(localStorage.favorite);
+      console.log(favoritesJSON);
+      console.log(localStorage.favorite);
+      favoritesJSON.forEach(id => {
+        var element = JSON.parse(localStorage[id]);
+        if (++num > this.itemPerPage) {
+          num = 1;
+        }
+        this.favoritesDisplay.push(
+          {
+            number: num,
+            category: element['category'],
+            name: element['name'],
+            address: element['address'],
+            id: element['id']
+          }
+        );
+        if (num == this.itemPerPage) {
+          this.favorites.push(this.favoritesDisplay);
+          this.favoritesDisplay = [];
+        }
+      });
+      if (this.favoritesDisplay.length != 0) {
+        this.favorites.push(this.favoritesDisplay);
+      }
+      this.favoritesDisplay = this.favorites[this.favoritesDisplayIndex];
+      if (this.favoritesDisplayIndex > 0) {
+        this.havePreviousFavorites = true;
+      }
+      else {
+        this.havePreviousFavorites = false;
+      }
+      if (this.favoritesDisplayIndex < this.favorites.length - 1) {
+        this.haveNextFavorites = true;
+      }
+      else {
+        this.haveNextFavorites = false;
+      }
+    }
+    else {
+      // alert
+      console.log("alert");
+    }
+  }
+
+  onFavoriteStar(index) {
+    var content = [];
+    if (localStorage.favorite) {
+      var contentJSON = localStorage.favorite;
+      content = JSON.parse(contentJSON);
+    }
+    content.push(this.placesDisplay[index]['id']);
+    localStorage.favorite = JSON.stringify(content);
+    localStorage[this.placesDisplay[index]['id']] = JSON.stringify(this.placesDisplay[index]);
+    this.updateFavorites();
+  }
+
+  deleteFavoriteStar(id) {
+    var content = [];
+    if (localStorage.favorite) {
+      var contentJSON = localStorage.favorite;
+      content = JSON.parse(contentJSON);
+    }
+    var index = content.indexOf(id);
+    content.splice(index, 1);
+    if (content.length == 0) {
+      localStorage.removeItem("favorite");
+    }
+    else {
+      localStorage.favorite = JSON.stringify(content);
+    }
+    localStorage.removeItem(id);
+    this.updateFavorites();
+  }
+
+  checkExists(id) {
+    return localStorage[id] || false;
+  }
+
+  onDetails() {
+    localStorage.clear();
   }
 }

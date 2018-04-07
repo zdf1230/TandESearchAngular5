@@ -89,14 +89,15 @@
   </div>
   <br>
   <div>
-      <button type="button" class="btn btn-primary button_border">Results</button>
-      <button type="button" class="btn btn-link">Favorites</button>
+    <button *ngIf="resultTable" type="button" class="btn btn-primary button_border">Results</button>
+    <button *ngIf="resultTable" type="button" class="btn btn-link" (click)="onFavorites()">Favorites</button>
+    <button *ngIf="favoriteTable" type="button" class="btn btn-link" (click)="onResults()">Results</button>
+    <button *ngIf="favoriteTable" type="button" class="btn btn-primary button_border">Favorites</button>
   </div>
-  
 </div>
 
 <div class="main_border row" *ngIf="resultTable">
-  <table class="table table-hover table-responsive-xl" id="result_panel">
+  <table class="table table-hover table-responsive-sm" id="result_panel">
     <thead>
       <tr>
         <th>#</th>
@@ -113,8 +114,11 @@
         <td><img class='category_icon' src={{x.category}} /></td>
         <td>{{x.name}}</td>
         <td>{{x.address}}</td>
-        <td><button class='btn btn-default button_border'><i class="far fa-star"></i></button></td>
-        <td><button class='btn btn-default button_border'><i class="fas fa-chevron-right"></i></button></td>
+        <td>
+          <button class='btn btn-default button_border' (click)="onFavoriteStar(x.number-1)" *ngIf="!checkExists(x.id)"><i class="far fa-star"></i></button>
+          <button class='btn btn-default button_border' (click)="deleteFavoriteStar(x.id)" *ngIf="checkExists(x.id)"><i class="fas fa-star yellow_star"></i></button>
+        </td>
+        <td><button class='btn btn-default button_border' (click)="onDetails()"><i class="fas fa-chevron-right"></i></button></td>
       </tr>
     </tbody>
   </table>
@@ -123,4 +127,34 @@
   <button class="btn btn-default button_border" (click)="onPrevious()" *ngIf="havePrevious"> Previous </button>
   <span>&nbsp;&nbsp;&nbsp;</span>
   <button class="btn btn-default button_border" (click)="onNext()" *ngIf="haveNext"> Next </button>
+</div>
+
+<div class="main_border row" *ngIf="favoriteTable">
+  <table class="table table-hover table-responsive-sm" id="result_panel">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Category</th>
+        <th>Name</th>
+        <th>Address</th>
+        <th>Favorite</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let x of favoritesDisplay">
+        <td>{{x.number}}</td>
+        <td><img class='category_icon' src={{x.category}} /></td>
+        <td>{{x.name}}</td>
+        <td>{{x.address}}</td>
+        <td><button class='btn btn-default button_border' (click)="deleteFavoriteStar(x.id)"><i class="fas fa-trash-alt"></i></button></td>
+        <td><button class='btn btn-default button_border' (click)="onDetails()"><i class="fas fa-chevron-right"></i></button></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<div class="main_border" *ngIf="favoriteTable">
+  <button class="btn btn-default button_border" (click)="onFavoritesPrevious()" *ngIf="havePreviousFavorites"> Previous </button>
+  <span>&nbsp;&nbsp;&nbsp;</span>
+  <button class="btn btn-default button_border" (click)="onFavoritesNext()" *ngIf="haveNextFavorites"> Next </button>
 </div>
