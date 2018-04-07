@@ -53,7 +53,7 @@
         <span class="col-0 col-sm-1"></span>
         <label for="distance" class="col-sm-3 col-form-label">Distance (Miles)</label>
         <div class="col-sm-5">
-          <input type="text" class="form-control" id="distance" placeholder="10" name="distance" ngModel>
+          <input #distance type="text" class="form-control" id="distance" placeholder="10" name="distance" ngModel>
         </div>
       </div>
       <fieldset class="form-group">
@@ -82,7 +82,7 @@
         <span class="col-0 col-sm-1"></span>
         <div class="col-sm-3 stay_left">
           <button type="button" class="btn btn-primary button_border" (click)="requestPlaces(searchForm)" [disabled]="!searchButtonStatus"><i class="fas fa-search"></i> Search</button>
-          <button type="button" class="btn button_border">Clear</button>
+          <button type="button" class="btn button_border" (click)="onClear()">Clear</button>
         </div>
       </div>
     </form>

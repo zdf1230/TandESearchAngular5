@@ -47,6 +47,7 @@ export class AppComponent implements OnInit{
 
   @ViewChild("keyword") keyword;
   @ViewChild("location") location;
+  @ViewChild("distance") distance;
 
   getCurrentLocation () {
     this.http.get(this.ipApiUrl).subscribe(
@@ -190,6 +191,39 @@ export class AppComponent implements OnInit{
       },
       error => this.error = error
     );
+  }
+
+  onClear() {
+    this.keywordStatus = false;
+    this.searchButtonStatus = false;
+    this.locationStatus = false;
+    this.locationValidStatus = false;
+
+    this.from = 'current';
+    this.category = 'default';
+    this.locationValue = '';
+    this.places = [];
+    this.placesDisplay = [];
+    this.placesDisplayIndex = 0;
+    this.havePrevious = false;
+    this.haveNext = false;
+
+    this.favorites = [];
+    this.favoritesDisplay = [];
+    this.favoritesDisplayIndex = 0;
+    this.havePreviousFavorites = false;
+    this.haveNextFavorites = false;
+
+    this.resultTable = false;
+    this.favoriteTable = false;
+    this.next_page_token = '';
+
+    this.renderer.removeClass(this.keyword.nativeElement, "is-invalid");
+    this.renderer.removeClass(this.location.nativeElement, "is-invalid");
+
+    this.keyword.nativeElement.value = '';
+    this.location.nativeElement.value = '';
+    this.distance.nativeElement.value = '';
   }
 
   onPrevious() {
