@@ -4,6 +4,8 @@ import { NgForm } from '@angular/forms';
 import { AgmCoreModule, MapsAPILoader } from '@agm/core';
 import { } from 'googlemaps';
 import { element } from 'protractor';
+import 'rxjs/add/operator/catch';
+import {Observable} from 'rxjs/Rx';
 
 @Component({
   selector: 'app-root',
@@ -41,6 +43,9 @@ export class AppComponent implements OnInit{
   resultTable = false;
   favoriteTable = false;
   next_page_token = '';
+
+  noRecords = false;
+  failedSearch = false;
 
   constructor(private http: HttpClient, private renderer: Renderer2, private mapsAPILoader: MapsAPILoader, private ngZone: NgZone) {
   }
@@ -151,7 +156,10 @@ export class AppComponent implements OnInit{
           lat: data['lat'],
           lng: data['lng']
         }
-      ).toPromise();
+      ).toPromise().catch(error => {
+        this.error = error;
+        console.log(this.error);
+      });
     }
     var distance = searchForm.value["distance"] == '' ? 10 : searchForm.value["distance"];
     var placesUrl = this.serverUrl + 'place?lat=' + searchLocation.lat
@@ -188,8 +196,22 @@ export class AppComponent implements OnInit{
         }
         this.resultTable = true;
         this.favoriteTable = false;
+        if (this.placesDisplay.length == 0) {
+          this.noRecords = true;
+        }
+        else {
+          this.noRecords = false;
+        }
+        this.failedSearch = false;
       },
-      error => this.error = error
+      error => {
+        this.error = error;
+        console.log(this.error);
+        this.resultTable = true;
+        this.favoriteTable = false;
+        this.noRecords = false;
+        this.failedSearch = true;
+      }
     );
   }
 
@@ -224,6 +246,9 @@ export class AppComponent implements OnInit{
     this.keyword.nativeElement.value = '';
     this.location.nativeElement.value = '';
     this.distance.nativeElement.value = '';
+
+    this.noRecords = false;
+    this.failedSearch = false;
   }
 
   onPrevious() {
@@ -281,6 +306,13 @@ export class AppComponent implements OnInit{
   onResults() {
     this.resultTable = true;
     this.favoriteTable = false;
+    if (this.placesDisplay.length == 0) {
+      this.noRecords = true;
+    }
+    else {
+      this.noRecords = false;
+    }
+    this.failedSearch = false;
   }
 
   onFavorites() {
@@ -292,11 +324,13 @@ export class AppComponent implements OnInit{
         this.favoritesDisplayIndex = 0;
         this.updateFavorites();
       }
+      this.noRecords = false;
     }
     else {
       //alert
-      console.log("alert");
+      this.noRecords = true;
     }
+    this.failedSearch = false;
   }
 
   onFavoritesPrevious() {
@@ -363,10 +397,11 @@ export class AppComponent implements OnInit{
       else {
         this.haveNextFavorites = false;
       }
+      this.noRecords = false;
     }
     else {
       // alert
-      console.log("alert");
+      this.noRecords = true;
     }
   }
 

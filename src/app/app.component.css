@@ -28,12 +28,12 @@ legend {
     margin: auto;
 }
 
-#result_panel {
+.result_panel {
     margin: auto;
     width: 85%;
 }
 
-#result_panel td{
+.result_panel td{
     vertical-align: middle;
 }
 

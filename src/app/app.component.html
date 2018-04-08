@@ -96,8 +96,8 @@
   </div>
 </div>
 
-<div class="main_border row" *ngIf="resultTable">
-  <table class="table table-hover table-responsive-sm" id="result_panel">
+<div class="main_border row" *ngIf="resultTable && !noRecords && !failedSearch">
+  <table class="table table-hover table-responsive-sm result_panel">
     <thead>
       <tr>
         <th>#</th>
@@ -123,14 +123,14 @@
     </tbody>
   </table>
 </div>
-<div class="main_border" *ngIf="resultTable">
+<div class="main_border" *ngIf="resultTable && !noRecords && !failedSearch">
   <button class="btn btn-default button_border" (click)="onPrevious()" *ngIf="havePrevious"> Previous </button>
   <span>&nbsp;&nbsp;&nbsp;</span>
   <button class="btn btn-default button_border" (click)="onNext()" *ngIf="haveNext"> Next </button>
 </div>
 
-<div class="main_border row" *ngIf="favoriteTable">
-  <table class="table table-hover table-responsive-sm" id="result_panel">
+<div class="main_border row" *ngIf="favoriteTable && !noRecords">
+  <table class="table table-hover table-responsive-sm result_panel">
     <thead>
       <tr>
         <th>#</th>
@@ -153,8 +153,21 @@
     </tbody>
   </table>
 </div>
-<div class="main_border" *ngIf="favoriteTable">
+<div class="main_border" *ngIf="favoriteTable && !noRecords">
   <button class="btn btn-default button_border" (click)="onFavoritesPrevious()" *ngIf="havePreviousFavorites"> Previous </button>
   <span>&nbsp;&nbsp;&nbsp;</span>
   <button class="btn btn-default button_border" (click)="onFavoritesNext()" *ngIf="haveNextFavorites"> Next </button>
+</div>
+
+<div *ngIf="noRecords">
+  <br> <br> <br>
+  <div class="alert alert-warning result_panel">
+    No records.
+  </div>
+</div>
+<div *ngIf="failedSearch">
+  <br> <br> <br>
+  <div class="alert alert-danger result_panel">
+    Failed to get search results.
+  </div>
 </div>
