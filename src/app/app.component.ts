@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, Renderer2, NgZone } from '@angular/core';
+import { Component, OnInit, ViewChild, Renderer2, NgZone, ChangeDetectorRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { NgForm } from '@angular/forms';
 import { AgmCoreModule, MapsAPILoader } from '@agm/core';
@@ -18,6 +18,7 @@ export class AppComponent implements OnInit{
   private serverUrl = 'http://localhost:3000/';
   error;
   currentLocation;
+  searchLocation;
 
   currentLocationStatus = false;
   keywordStatus = false;
@@ -44,15 +45,20 @@ export class AppComponent implements OnInit{
   favoriteTable = false;
   next_page_token = '';
 
+  detailsTab = false;
+  detailsObject = {} as google.maps.places.PlaceResult;
+  price_level;
+
   noRecords = false;
   failedSearch = false;
 
-  constructor(private http: HttpClient, private renderer: Renderer2, private mapsAPILoader: MapsAPILoader, private ngZone: NgZone) {
+  constructor(private http: HttpClient, private renderer: Renderer2, private mapsAPILoader: MapsAPILoader, private ngZone: NgZone, private changeDetector : ChangeDetectorRef) {
   }
 
   @ViewChild("keyword") keyword;
   @ViewChild("location") location;
   @ViewChild("distance") distance;
+  @ViewChild("mapsTab") mapsTab;
 
   getCurrentLocation () {
     this.http.get(this.ipApiUrl).subscribe(
@@ -118,6 +124,9 @@ export class AppComponent implements OnInit{
 
   disableLocation() {
     this.locationStatus = false;
+    // clear error message
+    this.renderer.removeClass(this.location.nativeElement, "is-invalid");
+    this.location.nativeElement.value = '';
     this.checkSearchButtonStatus();
   }
 
@@ -148,11 +157,11 @@ export class AppComponent implements OnInit{
   }
 
   async requestPlaces (searchForm : NgForm) {
-    var searchLocation = this.currentLocation;
+    this.searchLocation = this.currentLocation;
     if (searchForm.value["from"] == "other") {
       var locationUrl = this.serverUrl + 'location?location=' + searchForm.value['location'];
       await this.http.get(locationUrl).map(
-        data => searchLocation = {
+        data => this.searchLocation = {
           lat: data['lat'],
           lng: data['lng']
         }
@@ -162,8 +171,8 @@ export class AppComponent implements OnInit{
       });
     }
     var distance = searchForm.value["distance"] == '' ? 10 : searchForm.value["distance"];
-    var placesUrl = this.serverUrl + 'place?lat=' + searchLocation.lat
-      + '&lng=' + searchLocation.lng
+    var placesUrl = this.serverUrl + 'place?lat=' + this.searchLocation.lat
+      + '&lng=' + this.searchLocation.lng
       + '&distance=' + distance
       + '&category=' + searchForm.value["category"]
       + '&keyword=' + searchForm.value["keyword"];
@@ -178,10 +187,10 @@ export class AppComponent implements OnInit{
           this.placesDisplay.push(
             {
               number: ++num,
-              category: element['icon'],
+              icon: element['icon'],
               name: element['name'],
-              address: element['vicinity'],
-              id: element['id']
+              vicinity: element['vicinity'],
+              place_id: element['place_id']
             }
           );
         });
@@ -202,6 +211,7 @@ export class AppComponent implements OnInit{
         else {
           this.noRecords = false;
         }
+        this.detailsTab = false;
         this.failedSearch = false;
       },
       error => {
@@ -209,6 +219,7 @@ export class AppComponent implements OnInit{
         console.log(this.error);
         this.resultTable = true;
         this.favoriteTable = false;
+        this.detailsTab = false;
         this.noRecords = false;
         this.failedSearch = true;
       }
@@ -238,6 +249,7 @@ export class AppComponent implements OnInit{
 
     this.resultTable = false;
     this.favoriteTable = false;
+    this.detailsTab = false;
     this.next_page_token = '';
 
     this.renderer.removeClass(this.keyword.nativeElement, "is-invalid");
@@ -278,10 +290,10 @@ export class AppComponent implements OnInit{
             this.placesDisplay.push(
               {
                 number: ++num,
-                category: element['icon'],
+                icon: element['icon'],
                 name: element['name'],
-                address: element['vicinity'],
-                id: element['id']
+                vicinity: element['vicinity'],
+                place_id: element['place_id']
               }
             );
           });
@@ -370,10 +382,10 @@ export class AppComponent implements OnInit{
         this.favoritesDisplay.push(
           {
             number: num,
-            category: element['category'],
+            icon: element['icon'],
             name: element['name'],
-            address: element['address'],
-            id: element['id']
+            vicinity: element['vicinity'],
+            place_id: element['place_id']
           }
         );
         if (num == this.itemPerPage) {
@@ -400,20 +412,22 @@ export class AppComponent implements OnInit{
       this.noRecords = false;
     }
     else {
-      // alert
-      this.noRecords = true;
+      // alert only if on favorite page
+      if (this.favoriteTable) {
+        this.noRecords = true;
+      }
     }
   }
 
-  onFavoriteStar(index) {
+  onFavoriteStar(id, obj) {
     var content = [];
     if (localStorage.favorite) {
       var contentJSON = localStorage.favorite;
       content = JSON.parse(contentJSON);
     }
-    content.push(this.placesDisplay[index]['id']);
+    content.push(id);
     localStorage.favorite = JSON.stringify(content);
-    localStorage[this.placesDisplay[index]['id']] = JSON.stringify(this.placesDisplay[index]);
+    localStorage[id] = JSON.stringify(obj);
     this.updateFavorites();
   }
 
@@ -439,7 +453,28 @@ export class AppComponent implements OnInit{
     return localStorage[id] || false;
   }
 
-  onDetails() {
-    localStorage.clear();
+  onDetails(id) {
+    this.detailsTab = true;
+    this.changeDetector.detectChanges();
+    var map = new google.maps.Map(this.mapsTab.nativeElement, {
+      center: this.searchLocation,
+      zoom: 17
+    });
+    var request = {
+      placeId: id
+    };
+    var service = new google.maps.places.PlacesService(map);
+    service.getDetails(request, (place, status) => {
+      if (status == google.maps.places.PlacesServiceStatus.OK) {
+        this.detailsObject = Object.assign({}, place);
+        console.log(this.detailsObject);
+        this.price_level = Array(this.detailsObject.price_level);
+        this.changeDetector.detectChanges();
+      }
+    });
+  }
+
+  onList() {
+    this.detailsTab = false;
   }
 }

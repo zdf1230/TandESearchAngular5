@@ -89,14 +89,14 @@
   </div>
   <br>
   <div>
-    <button *ngIf="resultTable" type="button" class="btn btn-primary button_border">Results</button>
-    <button *ngIf="resultTable" type="button" class="btn btn-link" (click)="onFavorites()">Favorites</button>
-    <button *ngIf="favoriteTable" type="button" class="btn btn-link" (click)="onResults()">Results</button>
-    <button *ngIf="favoriteTable" type="button" class="btn btn-primary button_border">Favorites</button>
+    <button *ngIf="resultTable && !detailsTab" type="button" class="btn btn-primary button_border">Results</button>
+    <button *ngIf="resultTable && !detailsTab" type="button" class="btn btn-link" (click)="onFavorites()">Favorites</button>
+    <button *ngIf="favoriteTable && !detailsTab" type="button" class="btn btn-link" (click)="onResults()">Results</button>
+    <button *ngIf="favoriteTable && !detailsTab" type="button" class="btn btn-primary button_border">Favorites</button>
   </div>
 </div>
 
-<div class="main_border row" *ngIf="resultTable && !noRecords && !failedSearch">
+<div class="main_border row" *ngIf="resultTable && !noRecords && !failedSearch && !detailsTab">
   <table class="table table-hover table-responsive-sm result_panel">
     <thead>
       <tr>
@@ -111,25 +111,25 @@
     <tbody>
       <tr *ngFor="let x of placesDisplay">
         <td>{{x.number}}</td>
-        <td><img class='category_icon' src={{x.category}} /></td>
+        <td><img class='category_icon' src={{x.icon}} /></td>
         <td>{{x.name}}</td>
-        <td>{{x.address}}</td>
+        <td>{{x.vicinity}}</td>
         <td>
-          <button class='btn btn-default button_border' (click)="onFavoriteStar(x.number-1)" *ngIf="!checkExists(x.id)"><i class="far fa-star"></i></button>
-          <button class='btn btn-default button_border' (click)="deleteFavoriteStar(x.id)" *ngIf="checkExists(x.id)"><i class="fas fa-star yellow_star"></i></button>
+          <button class='btn btn-default button_border' (click)="onFavoriteStar(x.place_id, x)" *ngIf="!checkExists(x.place_id)"><i class="far fa-star"></i></button>
+          <button class='btn btn-default button_border' (click)="deleteFavoriteStar(x.place_id)" *ngIf="checkExists(x.place_id)"><i class="fas fa-star yellow_star"></i></button>
         </td>
-        <td><button class='btn btn-default button_border' (click)="onDetails()"><i class="fas fa-chevron-right"></i></button></td>
+        <td><button class='btn btn-default button_border' (click)="onDetails(x.place_id)"><i class="fas fa-chevron-right"></i></button></td>
       </tr>
     </tbody>
   </table>
 </div>
-<div class="main_border" *ngIf="resultTable && !noRecords && !failedSearch">
+<div class="main_border" *ngIf="resultTable && !noRecords && !failedSearch && !detailsTab">
   <button class="btn btn-default button_border" (click)="onPrevious()" *ngIf="havePrevious"> Previous </button>
   <span>&nbsp;&nbsp;&nbsp;</span>
   <button class="btn btn-default button_border" (click)="onNext()" *ngIf="haveNext"> Next </button>
 </div>
 
-<div class="main_border row" *ngIf="favoriteTable && !noRecords">
+<div class="main_border row" *ngIf="favoriteTable && !noRecords && !detailsTab">
   <table class="table table-hover table-responsive-sm result_panel">
     <thead>
       <tr>
@@ -144,19 +144,81 @@
     <tbody>
       <tr *ngFor="let x of favoritesDisplay">
         <td>{{x.number}}</td>
-        <td><img class='category_icon' src={{x.category}} /></td>
+        <td><img class='category_icon' src={{x.icon}} /></td>
         <td>{{x.name}}</td>
-        <td>{{x.address}}</td>
-        <td><button class='btn btn-default button_border' (click)="deleteFavoriteStar(x.id)"><i class="fas fa-trash-alt"></i></button></td>
-        <td><button class='btn btn-default button_border' (click)="onDetails()"><i class="fas fa-chevron-right"></i></button></td>
+        <td>{{x.vicinity}}</td>
+        <td><button class='btn btn-default button_border' (click)="deleteFavoriteStar(x.place_id)"><i class="fas fa-trash-alt"></i></button></td>
+        <td><button class='btn btn-default button_border' (click)="onDetails(x.place_id)"><i class="fas fa-chevron-right"></i></button></td>
       </tr>
     </tbody>
   </table>
 </div>
-<div class="main_border" *ngIf="favoriteTable && !noRecords">
+<div class="main_border" *ngIf="favoriteTable && !noRecords && !detailsTab">
   <button class="btn btn-default button_border" (click)="onFavoritesPrevious()" *ngIf="havePreviousFavorites"> Previous </button>
   <span>&nbsp;&nbsp;&nbsp;</span>
   <button class="btn btn-default button_border" (click)="onFavoritesNext()" *ngIf="haveNextFavorites"> Next </button>
+</div>
+
+<div class="main_border result_panel" *ngIf="detailsTab">
+  <h5> {{detailsObject.name}} </h5>
+  <br>
+  <div class="main_border row stay_left">
+    <button class="btn btn-default button_border" (click)="onList()"><i class="fas fa-chevron-left"></i> List</button>
+    <div class="keep_right">
+      <button class='btn btn-default button_border' (click)="onFavoriteStar(detailsObject.place_id, detailsObject)" *ngIf="!checkExists(detailsObject.place_id)"><i class="far fa-star"></i></button>
+      <button class='btn btn-default button_border' (click)="deleteFavoriteStar(detailsObject.place_id)" *ngIf="checkExists(detailsObject.place_id)"><i class="fas fa-star yellow_star"></i></button>
+      <button class='btn btn-default no_padding'><img class='icon' src='./assets/Twitter.png' /> </button>
+    </div>
+  </div>
+  
+  <tabset>
+    <tab heading="Info" customClass="tab">
+      <table class="table table-striped stay_left">
+        <tr *ngIf="detailsObject.formatted_address">
+          <th> Address </th>
+          <td> {{detailsObject.formatted_address}} </td>
+        </tr>
+        <tr *ngIf="detailsObject.international_phone_number">
+          <th> Phone Number </th>
+          <td> {{detailsObject.international_phone_number}} </td>
+        </tr>
+        <tr *ngIf="detailsObject.price_level">
+          <th> Price Level </th>
+          <td> <span *ngFor="let x of price_level">$</span> </td>
+        </tr>
+        <tr *ngIf="detailsObject.rating">
+          <th> Rating </th>
+          <td> 
+            {{detailsObject.rating}}
+          </td>
+        </tr>
+        <tr *ngIf="detailsObject.url">
+          <th> Google Page </th>
+          <td> <a href={{detailsObject.url}}> {{detailsObject.url}} </a> </td>
+        </tr>
+        <tr *ngIf="detailsObject.website">
+          <th> Website </th>
+          <td> <a href={{detailsObject.website}}> {{detailsObject.website}} </a> </td>
+        </tr>
+        <tr *ngIf="detailsObject.opening_hours">
+          <th> Hours </th>
+          <td> 
+            <span *ngIf="detailsObject.opening_hours.open_now">Open now: </span> 
+            <span *ngIf="!detailsObject.opening_hours.open_now"> Closed </span>
+          </td>
+        </tr>
+      </table>
+    </tab>
+    <tab heading="Photos" customClass="tab"> 
+      
+    </tab>
+    <tab heading="Map" customClass="tab"> 
+      <div #mapsTab> </div>
+    </tab>
+    <tab heading="Reviews" customClass="tab">
+
+    </tab>
+  </tabset>
 </div>
 
 <div *ngIf="noRecords">

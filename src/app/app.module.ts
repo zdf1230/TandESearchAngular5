@@ -3,7 +3,6 @@ import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { AlertModule } from 'ngx-bootstrap';
 import { ProgressbarModule } from 'ngx-bootstrap';
 import { TabsModule } from 'ngx-bootstrap';
 import { AgmCoreModule } from '@agm/core';
@@ -19,7 +18,6 @@ import { AppComponent } from './app.component';
     BrowserModule,
     HttpClientModule,
     FormsModule,
-    AlertModule.forRoot(),
     ProgressbarModule.forRoot(),
     TabsModule.forRoot(),
     AgmCoreModule.forRoot({

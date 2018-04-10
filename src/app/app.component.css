@@ -50,11 +50,24 @@ legend {
 }
 
 .icon {
-    width: 15px;
+    width: 44px;
+    height: 38px;
 }
 
 .button_border {
     border-width: 1px;
     border-style: solid;
     border-color: silver;
+}
+
+::ng-deep .tab:first-child {
+    margin-left: auto;
+}
+
+.keep_right {
+    margin-left: auto;
+}
+
+.no_padding {
+    padding: 0px;
 }
