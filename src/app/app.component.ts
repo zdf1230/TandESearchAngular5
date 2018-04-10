@@ -6,6 +6,7 @@ import { } from 'googlemaps';
 import { element } from 'protractor';
 import 'rxjs/add/operator/catch';
 import {Observable} from 'rxjs/Rx';
+import * as moment from 'moment';
 
 @Component({
   selector: 'app-root',
@@ -48,6 +49,10 @@ export class AppComponent implements OnInit{
   detailsTab = false;
   detailsObject = {} as google.maps.places.PlaceResult;
   price_level;
+  star_rating;
+  todays_hours;
+  todays_week;
+  todaysHoursDisplay = [];
 
   noRecords = false;
   failedSearch = false;
@@ -469,6 +474,25 @@ export class AppComponent implements OnInit{
         this.detailsObject = Object.assign({}, place);
         console.log(this.detailsObject);
         this.price_level = Array(this.detailsObject.price_level);
+        this.star_rating = this.detailsObject.rating * 20 + "%";
+        var dayOfWeek = parseInt(moment().utcOffset(this.detailsObject.utc_offset).format('E'));
+        var openingHours = this.detailsObject.opening_hours.weekday_text;
+        this.todays_hours = openingHours[dayOfWeek - 1].substr(openingHours[dayOfWeek - 1].indexOf(' '));
+        this.todays_week = openingHours[dayOfWeek - 1].substr(0, openingHours[dayOfWeek - 1].indexOf(':'));
+        this.todaysHoursDisplay = [];
+        for (var i = dayOfWeek; i < openingHours.length; ++i) {
+          this.todaysHoursDisplay.push({
+            hours: openingHours[i].substr(openingHours[i].indexOf(' ')),
+            week: openingHours[i].substr(0, openingHours[i].indexOf(':'))
+          });
+        }
+        for (var i = 0; i < dayOfWeek - 1; ++i) {
+          this.todaysHoursDisplay.push({
+            hours: openingHours[i].substr(openingHours[i].indexOf(' ')),
+            week: openingHours[i].substr(0, openingHours[i].indexOf(':'))
+          });
+        }
+        console.log(this.todaysHoursDisplay);
         this.changeDetector.detectChanges();
       }
     });

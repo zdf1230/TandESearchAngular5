@@ -71,3 +71,33 @@ legend {
 .no_padding {
     padding: 0px;
 }
+
+.stars_outer {
+    font-family: FontAwesome;
+    display: inline-block;
+    position: relative;
+}
+
+.stars_inner {
+    font-family: FontAwesome;
+    position: absolute;
+    top: 0;
+    left: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 0;
+}
+
+.stars_outer::before {
+    content: "\f006 \f006 \f006 \f006 \f006";
+    opacity: 0;
+}
+
+.stars_inner::before {
+    content: "\f005 \f005 \f005 \f005 \f005";
+    color: gold;
+}
+
+.no_text_decoration {
+    text-decoration: none;
+}

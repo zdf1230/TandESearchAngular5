@@ -89,10 +89,10 @@
   </div>
   <br>
   <div>
-    <button *ngIf="resultTable && !detailsTab" type="button" class="btn btn-primary button_border">Results</button>
-    <button *ngIf="resultTable && !detailsTab" type="button" class="btn btn-link" (click)="onFavorites()">Favorites</button>
-    <button *ngIf="favoriteTable && !detailsTab" type="button" class="btn btn-link" (click)="onResults()">Results</button>
-    <button *ngIf="favoriteTable && !detailsTab" type="button" class="btn btn-primary button_border">Favorites</button>
+    <button *ngIf="!favoriteTable" type="button" class="btn btn-primary button_border">Results</button>
+    <button *ngIf="!favoriteTable" type="button" class="btn btn-link no_text_decoration" (click)="onFavorites()">Favorites</button>
+    <button *ngIf="favoriteTable" type="button" class="btn btn-link no_text_decoration" (click)="onResults()">Results</button>
+    <button *ngIf="favoriteTable" type="button" class="btn btn-primary button_border">Favorites</button>
   </div>
 </div>
 
@@ -189,22 +189,30 @@
         <tr *ngIf="detailsObject.rating">
           <th> Rating </th>
           <td> 
-            {{detailsObject.rating}}
+            {{detailsObject.rating}} 
+            <div class="stars_outer">
+              <div [style.width]="star_rating" class="stars_inner"></div>
+            </div>
           </td>
         </tr>
         <tr *ngIf="detailsObject.url">
           <th> Google Page </th>
-          <td> <a href={{detailsObject.url}}> {{detailsObject.url}} </a> </td>
+          <td> <a target='_blank' href={{detailsObject.url}}> {{detailsObject.url}} </a> </td>
         </tr>
         <tr *ngIf="detailsObject.website">
           <th> Website </th>
-          <td> <a href={{detailsObject.website}}> {{detailsObject.website}} </a> </td>
+          <td> <a target='_blank' href={{detailsObject.website}}> {{detailsObject.website}} </a> </td>
         </tr>
         <tr *ngIf="detailsObject.opening_hours">
           <th> Hours </th>
           <td> 
             <span *ngIf="detailsObject.opening_hours.open_now">Open now: </span> 
             <span *ngIf="!detailsObject.opening_hours.open_now"> Closed </span>
+            {{todays_hours}}
+            &nbsp;&nbsp;&nbsp;
+            <button class="btn btn-link no_padding" (click)="staticModal.show()">
+              Daily open hours
+            </button>
           </td>
         </tr>
       </table>
@@ -231,5 +239,37 @@
   <br> <br> <br>
   <div class="alert alert-danger result_panel">
     Failed to get search results.
+  </div>
+</div>
+
+<div class="modal fade" bsModal #staticModal="bs-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title pull-left">Open hours</h4>
+        <button type="button" class="close pull-right" aria-label="Close" (click)="staticModal.hide()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <table class="table">
+          <thead>
+            <tr>
+              <th> {{todays_week}} </th>
+              <th> {{todays_hours}} </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let x of todaysHoursDisplay">
+              <td> {{x.week}} </td>
+              <td> {{x.hours}} </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="staticModal.hide()"> Close </button>
+      </div>
+    </div>
   </div>
 </div>
