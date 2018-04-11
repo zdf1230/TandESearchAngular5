@@ -173,6 +173,7 @@
   
   <tabset>
     <tab heading="Info" customClass="tab">
+      <br>
       <table class="table table-striped stay_left">
         <tr *ngIf="detailsObject.formatted_address">
           <th> Address </th>
@@ -218,7 +219,54 @@
       </table>
     </tab>
     <tab heading="Photos" customClass="tab"> 
-      
+      <br>
+      <div class="card-columns">
+        <div class="card" *ngFor="let x of photos">
+          <div class="card-body photo_border">
+            <a target='_blank' href={{x}}>
+              <img class="card-img" src={{x}}>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="row" id="photo-display-sm">
+        <div class="col-sm-3 no_padding">
+          <div class="card photo_margin" *ngFor="let x of photos_col0">
+            <div class="card-body photo_border">
+              <a target='_blank' href={{x}}>
+                <img class="card-img" src={{x}}>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-3 no_padding">
+          <div class="card photo_margin" *ngFor="let x of photos_col1">
+            <div class="card-body photo_border">
+              <a target='_blank' href={{x}}>
+                <img class="card-img" src={{x}}>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-3 no_padding">
+          <div class="card photo_margin" *ngFor="let x of photos_col2">
+            <div class="card-body photo_border">
+              <a target='_blank' href={{x}}>
+                <img class="card-img" src={{x}}>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-3 no_padding">
+          <div class="card photo_margin" *ngFor="let x of photos_col3">
+            <div class="card-body photo_border">
+              <a target='_blank' href={{x}}>
+                <img class="card-img" src={{x}}>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </tab>
     <tab heading="Map" customClass="tab"> 
       <div #mapsTab> </div>

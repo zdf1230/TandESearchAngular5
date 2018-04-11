@@ -53,6 +53,11 @@ export class AppComponent implements OnInit{
   todays_hours;
   todays_week;
   todaysHoursDisplay = [];
+  photos = [];
+  photos_col0 = [];
+  photos_col1 = [];
+  photos_col2 = [];
+  photos_col3 = [];
 
   noRecords = false;
   failedSearch = false;
@@ -475,24 +480,47 @@ export class AppComponent implements OnInit{
         console.log(this.detailsObject);
         this.price_level = Array(this.detailsObject.price_level);
         this.star_rating = this.detailsObject.rating * 20 + "%";
-        var dayOfWeek = parseInt(moment().utcOffset(this.detailsObject.utc_offset).format('E'));
-        var openingHours = this.detailsObject.opening_hours.weekday_text;
-        this.todays_hours = openingHours[dayOfWeek - 1].substr(openingHours[dayOfWeek - 1].indexOf(' '));
-        this.todays_week = openingHours[dayOfWeek - 1].substr(0, openingHours[dayOfWeek - 1].indexOf(':'));
-        this.todaysHoursDisplay = [];
-        for (var i = dayOfWeek; i < openingHours.length; ++i) {
-          this.todaysHoursDisplay.push({
-            hours: openingHours[i].substr(openingHours[i].indexOf(' ')),
-            week: openingHours[i].substr(0, openingHours[i].indexOf(':'))
-          });
+        if (this.detailsObject.opening_hours) {
+          var dayOfWeek = parseInt(moment().utcOffset(this.detailsObject.utc_offset).format('E'));
+          var openingHours = this.detailsObject.opening_hours.weekday_text;
+          this.todays_hours = openingHours[dayOfWeek - 1].substr(openingHours[dayOfWeek - 1].indexOf(' '));
+          this.todays_week = openingHours[dayOfWeek - 1].substr(0, openingHours[dayOfWeek - 1].indexOf(':'));
+          this.todaysHoursDisplay = [];
+          for (var i = dayOfWeek; i < openingHours.length; ++i) {
+            this.todaysHoursDisplay.push({
+              hours: openingHours[i].substr(openingHours[i].indexOf(' ')),
+              week: openingHours[i].substr(0, openingHours[i].indexOf(':'))
+            });
+          }
+          for (var i = 0; i < dayOfWeek - 1; ++i) {
+            this.todaysHoursDisplay.push({
+              hours: openingHours[i].substr(openingHours[i].indexOf(' ')),
+              week: openingHours[i].substr(0, openingHours[i].indexOf(':'))
+            });
+          }
         }
-        for (var i = 0; i < dayOfWeek - 1; ++i) {
-          this.todaysHoursDisplay.push({
-            hours: openingHours[i].substr(openingHours[i].indexOf(' ')),
-            week: openingHours[i].substr(0, openingHours[i].indexOf(':'))
-          });
+        this.photos = [];
+        this.detailsObject.photos.forEach(photo => {
+          this.photos.push(photo.getUrl({'maxWidth': photo.width}));
+        });
+        this.photos_col0 = [];
+        this.photos_col1 = [];
+        this.photos_col2 = [];
+        this.photos_col3 = [];
+        for (var i = 0; i < this.detailsObject.photos.length; ++i) {
+          if (i % 4 == 0) {
+            this.photos_col0.push(this.detailsObject.photos[i].getUrl({'maxWidth': this.detailsObject.photos[i].width}));
+          }
+          if (i % 4 == 1) {
+            this.photos_col1.push(this.detailsObject.photos[i].getUrl({'maxWidth': this.detailsObject.photos[i].width}));
+          }
+          if (i % 4 == 2) {
+            this.photos_col2.push(this.detailsObject.photos[i].getUrl({'maxWidth': this.detailsObject.photos[i].width}));
+          }
+          if (i % 4 == 3) {
+            this.photos_col3.push(this.detailsObject.photos[i].getUrl({'maxWidth': this.detailsObject.photos[i].width}));
+          }
         }
-        console.log(this.todaysHoursDisplay);
         this.changeDetector.detectChanges();
       }
     });

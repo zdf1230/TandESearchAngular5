@@ -101,3 +101,24 @@ legend {
 .no_text_decoration {
     text-decoration: none;
 }
+
+@media (min-width: 576px) {
+    .card-columns {
+        column-count: 4;
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    #photo-display-sm {
+        display: none;
+    }
+}
+
+.photo_border {
+    padding: 2px;
+}
+
+.photo_margin {
+    margin: 5px;
+}
