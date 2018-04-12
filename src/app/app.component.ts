@@ -58,6 +58,8 @@ export class AppComponent implements OnInit{
   photos_col1 = [];
   photos_col2 = [];
   photos_col3 = [];
+  reviewsDisplay = [];
+
   toLocationValue = '';
   travelMode = 'DRIVING';
   mapTabSelected = false;
@@ -80,6 +82,8 @@ export class AppComponent implements OnInit{
   @ViewChild("mapsTab") mapsTab;
   @ViewChild("fromlocation") fromlocation;
   @ViewChild("directionsPanel") directionsPanel;
+  @ViewChild("reviewsDropdown") reviewsDropdown;
+  @ViewChild("orderDropdown") orderDropdown;
 
   getCurrentLocation () {
     this.http.get(this.ipApiUrl).subscribe(
@@ -101,7 +105,6 @@ export class AppComponent implements OnInit{
     this.getCurrentLocation();
 
     this.mapsAPILoader.load().then(() => {
-      this.changeDetector.detectChanges();
       this.map = new google.maps.Map(this.mapsTab.nativeElement, {
         center: this.currentLocation,
         zoom: 15
@@ -200,7 +203,6 @@ export class AppComponent implements OnInit{
         console.log(this.error);
       });
     }
-    this.map.setCenter(this.searchLocation);
     var distance = searchForm.value["distance"] == '' ? 10 : searchForm.value["distance"];
     var placesUrl = this.serverUrl + 'place?lat=' + this.searchLocation.lat
       + '&lng=' + this.searchLocation.lng
@@ -495,10 +497,7 @@ export class AppComponent implements OnInit{
   onDetails(id) {
     this.detailsTab = true;
     this.changeDetector.detectChanges();
-    // var map = new google.maps.Map(this.mapsTab.nativeElement, {
-    //   center: this.searchLocation,
-    //   zoom: 14
-    // });
+
     var request = {
       placeId: id
     };
@@ -555,8 +554,133 @@ export class AppComponent implements OnInit{
         this.toLocationValue = this.detailsObject.name + ", " + this.detailsObject.formatted_address;
         this.travelMode = 'DRIVING';
         this.changeDetector.detectChanges();
+        this.reviewsDisplay = [];
+        if (this.detailsObject.reviews) {
+          var reviews;
+          reviews = this.detailsObject.reviews;
+          var num = 0;
+          reviews.forEach((review) => {
+            this.reviewsDisplay.push({
+              review: review,
+              time: moment(review.time * 1000).format('YYYY-MM-DD HH:mm:ss'),
+              rating: Array(review.rating),
+              order: num++
+            });
+          });
+        }
       }
     });
+  }
+
+  onGoogleReviews() {
+    this.reviewsDropdown.nativeElement.innerText = "Google Reviews";
+    this.reviewsDisplay = [];
+    if (this.detailsObject.reviews) {
+      var reviews;
+      reviews = this.detailsObject.reviews;
+      var num = 0;
+      reviews.forEach((review) => {
+        this.reviewsDisplay.push({
+          review: review,
+          time: moment(review.time * 1000).format('YYYY-MM-DD HH:mm:ss'),
+          rating: Array(review.rating),
+          order: num++
+        });
+      });
+    }
+  }
+
+  onYelpReviews() {
+    this.reviewsDropdown.nativeElement.innerText = "Yelp Reviews";
+    var city;
+    var state;
+    var country;
+    this.detailsObject.address_components.forEach((addr) => {
+      if (addr.types.includes('administrative_area_level_2')) {
+        city = addr.long_name;
+      }
+      if (addr.types.includes('administrative_area_level_1')) {
+        state = addr.short_name;
+      }
+      if (addr.types.includes('country')) {
+        country = addr.short_name;
+      }
+    });
+    var yelpUrl = this.serverUrl + 'yelpreviews?name=' + this.detailsObject.name
+      + '&address1=' + this.detailsObject.formatted_address
+      + '&city=' + city
+      + '&state=' + state
+      + '&country=' + country
+      + '&latitude=' + this.detailsObject.geometry.location.lat()
+      + '&longtitude=' + this.detailsObject.geometry.location.lng();
+    this.reviewsDisplay = [];
+    this.http.get(yelpUrl).subscribe(
+      data => {
+        var num = 0;
+        data['reviews'].forEach((yelp) => {
+          var review = {
+            author_url: yelp.url,
+            image_url: yelp.user.image_url,
+            author_name: yelp.user.name,
+            text: yelp.text,
+            rating: yelp.rating,
+            time: moment(yelp.time_created).unix()
+          };
+          this.reviewsDisplay.push({
+            review: review,
+            time: yelp.time_created,
+            rating: Array(yelp.rating),
+            order: num++
+          });
+        });
+      },
+      error => this.error = error
+    );
+  }
+
+  onDefaultOrder() {
+    this.reviewsDisplay.sort(this.defaultOrder);
+    this.orderDropdown.nativeElement.innerText = "Default Order";
+  }
+
+  defaultOrder(a, b) {
+    return a.order < b.order ? -1 : 1;
+  }
+
+  onHighestRating() {
+    this.reviewsDisplay.sort(this.highestRating);
+    this.orderDropdown.nativeElement.innerText = "Highest Rating";
+  }
+
+  highestRating(a, b) {
+    return a.review.rating > b.review.rating ? -1 : 1;
+  }
+
+  onLowestRating() {
+    this.reviewsDisplay.sort(this.lowestRating);
+    this.orderDropdown.nativeElement.innerText = "Lowest Rating";
+  }
+
+  lowestRating(a, b) {
+    return a.review.rating < b.review.rating ? -1 : 1;
+  }
+
+  onMostRecent() {
+    this.reviewsDisplay.sort(this.mostRecent);
+    this.orderDropdown.nativeElement.innerText = "Most Recent";
+  }
+
+  mostRecent(a, b) {
+    return a.review.time > b.review.time ? -1 : 1;
+  }
+
+  onLeastRecent() {
+    this.reviewsDisplay.sort(this.leastRecent);
+    this.orderDropdown.nativeElement.innerText = "Least Recent";
+  }
+
+  leastRecent(a, b) {
+    return a.review.time < b.review.time ? -1 : 1;
   }
 
   onList() {
@@ -647,5 +771,9 @@ export class AppComponent implements OnInit{
         this.directionsDisplay.setDirections(response);
       }
     });
+  }
+
+  imgError(image){
+    image.parentNode.parentNode.style.display = 'none';
   }
 }

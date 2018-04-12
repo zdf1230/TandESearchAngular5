@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { ProgressbarModule } from 'ngx-bootstrap';
 import { TabsModule } from 'ngx-bootstrap';
 import { ModalModule } from 'ngx-bootstrap';
+import { BsDropdownModule } from 'ngx-bootstrap';
 import { AgmCoreModule } from '@agm/core';
 
 import { AppComponent } from './app.component';
@@ -22,6 +23,7 @@ import { AppComponent } from './app.component';
     ProgressbarModule.forRoot(),
     TabsModule.forRoot(),
     ModalModule.forRoot(),
+    BsDropdownModule.forRoot(),
     AgmCoreModule.forRoot({
       apiKey: 'AIzaSyATY-GC2b0J-8GgFc7xK8mrOX5Tm7S4RXA',
       libraries: ["places"]

@@ -305,7 +305,52 @@
       </div>
     </tab>
     <tab heading="Reviews" customClass="tab" (select)="mapTabSelected = false;">
-      
+      <br>
+      <div class="row no_margin">
+        <div class="btn-group" dropdown>
+          <button #reviewsDropdown dropdownToggle type="button" class="btn btn-secondary dropdown-toggle">
+            Google Reviews <span class="caret"></span>
+          </button>
+          <ul *dropdownMenu class="dropdown-menu" role="menu">
+            <li role="menuitem"><a class="dropdown-item" href="javascript:void(0);" (click)="onGoogleReviews()">Google Reviews</a></li>
+            <li role="menuitem"><a class="dropdown-item" href="javascript:void(0);" (click)="onYelpReviews()">Yelp Reviews</a></li>
+          </ul>
+        </div>
+        &nbsp;&nbsp;&nbsp;
+        <div class="btn-group" dropdown>
+          <button #orderDropdown dropdownToggle type="button" class="btn btn-secondary dropdown-toggle">
+            Default Order <span class="caret"></span>
+          </button>
+          <ul *dropdownMenu class="dropdown-menu" role="menu">
+            <li role="menuitem"><a class="dropdown-item" href="javascript:void(0);" (click)="onDefaultOrder()">Default Order</a></li>
+            <li role="menuitem"><a class="dropdown-item" href="javascript:void(0);" (click)="onHighestRating()">Highest Rating</a></li>
+            <li role="menuitem"><a class="dropdown-item" href="javascript:void(0);" (click)="onLowestRating()">Lowest Rating</a></li>
+            <li role="menuitem"><a class="dropdown-item" href="javascript:void(0);" (click)="onMostRecent()">Most Recent</a></li>
+            <li role="menuitem"><a class="dropdown-item" href="javascript:void(0);" (click)="onLeastRecent()">Least Recent</a></li>
+          </ul>
+        </div>
+      </div>
+      <br>
+      <table class="table review_table">
+        <tbody>
+          <tr *ngFor="let x of reviewsDisplay">
+            <td>
+              <a target="_blank" href={{x.review.author_url}}>
+                <img class="profile_icon" src={{x.review.profile_photo_url}} *ngIf="x.review.profile_photo_url" onerror="imgError(this);">
+                <img class="profile_icon rounded-circle" src={{x.review.image_url}} *ngIf="x.review.image_url" onerror="imgError(this);">
+              </a>
+            </td>
+            <td>
+              <div> <a target="_blank" href={{x.review.author_url}}> {{x.review.author_name}} </a> </div>
+              <div>
+                <span class="orange_star" *ngFor="let s of x.rating">★</span>
+                <span class="gray_text" >{{x.time}}</span>
+              </div>
+              <div> {{x.review.text}} </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </tab>
   </tabset>
 </div>
