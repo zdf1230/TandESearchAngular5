@@ -28,6 +28,11 @@ legend {
     margin: auto;
 }
 
+#mapsTab {
+    height: 300px;
+    width: 100%;
+}
+
 .result_panel {
     margin: auto;
     width: 85%;
@@ -66,6 +71,10 @@ legend {
 
 .keep_right {
     margin-left: auto;
+}
+
+.keep_center {
+    margin: auto;
 }
 
 .no_padding {
@@ -121,4 +130,8 @@ legend {
 
 .photo_margin {
     margin: 5px;
+}
+
+agm-map {
+    height: 300px;
 }

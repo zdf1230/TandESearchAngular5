@@ -58,6 +58,15 @@ export class AppComponent implements OnInit{
   photos_col1 = [];
   photos_col2 = [];
   photos_col3 = [];
+  toLocationValue = '';
+  travelMode = 'DRIVING';
+  mapTabSelected = false;
+  map;
+  pegman;
+  panorama;
+  fromLocationValue = '';
+  directionsService;
+  directionsDisplay;
 
   noRecords = false;
   failedSearch = false;
@@ -69,6 +78,8 @@ export class AppComponent implements OnInit{
   @ViewChild("location") location;
   @ViewChild("distance") distance;
   @ViewChild("mapsTab") mapsTab;
+  @ViewChild("fromlocation") fromlocation;
+  @ViewChild("directionsPanel") directionsPanel;
 
   getCurrentLocation () {
     this.http.get(this.ipApiUrl).subscribe(
@@ -90,6 +101,15 @@ export class AppComponent implements OnInit{
     this.getCurrentLocation();
 
     this.mapsAPILoader.load().then(() => {
+      this.changeDetector.detectChanges();
+      this.map = new google.maps.Map(this.mapsTab.nativeElement, {
+        center: this.currentLocation,
+        zoom: 15
+      });
+
+      this.directionsService = new google.maps.DirectionsService();
+      this.directionsDisplay = new google.maps.DirectionsRenderer();
+
       let autocomplete = new google.maps.places.Autocomplete(this.location.nativeElement, {
         types: ["address"]
       });
@@ -180,6 +200,7 @@ export class AppComponent implements OnInit{
         console.log(this.error);
       });
     }
+    this.map.setCenter(this.searchLocation);
     var distance = searchForm.value["distance"] == '' ? 10 : searchForm.value["distance"];
     var placesUrl = this.serverUrl + 'place?lat=' + this.searchLocation.lat
       + '&lng=' + this.searchLocation.lng
@@ -223,6 +244,7 @@ export class AppComponent implements OnInit{
         }
         this.detailsTab = false;
         this.failedSearch = false;
+        this.mapTabSelected = false;
       },
       error => {
         this.error = error;
@@ -232,6 +254,7 @@ export class AppComponent implements OnInit{
         this.detailsTab = false;
         this.noRecords = false;
         this.failedSearch = true;
+        this.mapTabSelected = false;
       }
     );
   }
@@ -261,6 +284,8 @@ export class AppComponent implements OnInit{
     this.favoriteTable = false;
     this.detailsTab = false;
     this.next_page_token = '';
+
+    this.mapTabSelected = false;
 
     this.renderer.removeClass(this.keyword.nativeElement, "is-invalid");
     this.renderer.removeClass(this.location.nativeElement, "is-invalid");
@@ -328,6 +353,8 @@ export class AppComponent implements OnInit{
   onResults() {
     this.resultTable = true;
     this.favoriteTable = false;
+    this.detailsTab = false;
+    this.mapTabSelected = false;
     if (this.placesDisplay.length == 0) {
       this.noRecords = true;
     }
@@ -340,6 +367,8 @@ export class AppComponent implements OnInit{
   onFavorites() {
     this.resultTable = false;
     this.favoriteTable = true;
+    this.detailsTab = false;
+    this.mapTabSelected = false;
     if (localStorage.favorite) {
       // it needs update only if the array favorites is empty.
       if (this.favorites.length == 0) {
@@ -466,14 +495,14 @@ export class AppComponent implements OnInit{
   onDetails(id) {
     this.detailsTab = true;
     this.changeDetector.detectChanges();
-    var map = new google.maps.Map(this.mapsTab.nativeElement, {
-      center: this.searchLocation,
-      zoom: 17
-    });
+    // var map = new google.maps.Map(this.mapsTab.nativeElement, {
+    //   center: this.searchLocation,
+    //   zoom: 14
+    // });
     var request = {
       placeId: id
     };
-    var service = new google.maps.places.PlacesService(map);
+    var service = new google.maps.places.PlacesService(this.map);
     service.getDetails(request, (place, status) => {
       if (status == google.maps.places.PlacesServiceStatus.OK) {
         this.detailsObject = Object.assign({}, place);
@@ -500,27 +529,31 @@ export class AppComponent implements OnInit{
           }
         }
         this.photos = [];
-        this.detailsObject.photos.forEach(photo => {
-          this.photos.push(photo.getUrl({'maxWidth': photo.width}));
-        });
         this.photos_col0 = [];
         this.photos_col1 = [];
         this.photos_col2 = [];
         this.photos_col3 = [];
-        for (var i = 0; i < this.detailsObject.photos.length; ++i) {
-          if (i % 4 == 0) {
-            this.photos_col0.push(this.detailsObject.photos[i].getUrl({'maxWidth': this.detailsObject.photos[i].width}));
-          }
-          if (i % 4 == 1) {
-            this.photos_col1.push(this.detailsObject.photos[i].getUrl({'maxWidth': this.detailsObject.photos[i].width}));
-          }
-          if (i % 4 == 2) {
-            this.photos_col2.push(this.detailsObject.photos[i].getUrl({'maxWidth': this.detailsObject.photos[i].width}));
-          }
-          if (i % 4 == 3) {
-            this.photos_col3.push(this.detailsObject.photos[i].getUrl({'maxWidth': this.detailsObject.photos[i].width}));
+        if (this.detailsObject.photos) {
+          this.detailsObject.photos.forEach(photo => {
+            this.photos.push(photo.getUrl({'maxWidth': photo.width}));
+          });
+          for (var i = 0; i < this.detailsObject.photos.length; ++i) {
+            if (i % 4 == 0) {
+              this.photos_col0.push(this.detailsObject.photos[i].getUrl({'maxWidth': this.detailsObject.photos[i].width}));
+            }
+            if (i % 4 == 1) {
+              this.photos_col1.push(this.detailsObject.photos[i].getUrl({'maxWidth': this.detailsObject.photos[i].width}));
+            }
+            if (i % 4 == 2) {
+              this.photos_col2.push(this.detailsObject.photos[i].getUrl({'maxWidth': this.detailsObject.photos[i].width}));
+            }
+            if (i % 4 == 3) {
+              this.photos_col3.push(this.detailsObject.photos[i].getUrl({'maxWidth': this.detailsObject.photos[i].width}));
+            }
           }
         }
+        this.toLocationValue = this.detailsObject.name + ", " + this.detailsObject.formatted_address;
+        this.travelMode = 'DRIVING';
         this.changeDetector.detectChanges();
       }
     });
@@ -528,5 +561,91 @@ export class AppComponent implements OnInit{
 
   onList() {
     this.detailsTab = false;
+    this.mapTabSelected = false;
+  }
+
+  onMapTab() {
+    this.pegman = true;
+    this.mapTabSelected = true;
+    this.changeDetector.detectChanges();
+    // when the map tab display : block, refresh the map
+    google.maps.event.trigger(this.map, 'resize');
+
+    // clear map first
+    this.directionsDisplay.setMap(null);
+    this.directionsDisplay.setPanel(null);
+
+    this.map.setCenter(this.detailsObject.geometry.location);
+    var marker = new google.maps.Marker({
+      position: this.detailsObject.geometry.location
+    });
+    marker.setMap(this.map);
+    this.panorama = this.map.getStreetView();
+    this.panorama.setPosition(this.detailsObject.geometry.location);
+    this.panorama.setOptions({
+      enableCloseButton: false
+    });
+
+    var autocomplete = new google.maps.places.Autocomplete(this.fromlocation.nativeElement, {
+      types: ["address"]
+    });
+
+    autocomplete.addListener("place_changed", () => {
+      this.ngZone.run(() => {
+        let place = autocomplete.getPlace();
+        if (place.geometry === undefined || place.geometry === null) {
+          return;
+        }
+        this.fromLocationValue = place.formatted_address;
+      });
+    });
+  }
+
+  onPegmanIcon() {
+    this.pegman = false;
+    if (!this.panorama.getVisible()) {
+      this.panorama.setVisible(true);
+    }
+  }
+
+  onMapIcon() {
+    this.pegman = true;
+    if (this.panorama.getVisible()) {
+      this.panorama.setVisible(false);
+    }
+  }
+
+  async onGetDirections(directionsForm : NgForm) {
+    this.directionsDisplay.setMap(this.map);
+    this.directionsDisplay.setPanel(this.directionsPanel.nativeElement);
+    var origin;
+    if (directionsForm.value['fromlocation'] == '') {
+      origin = this.currentLocation;
+    }
+    else {
+      var locationUrl = this.serverUrl + 'location?location=' + directionsForm.value['fromlocation'];
+      await this.http.get(locationUrl).map(
+        data => origin = {
+          lat: data['lat'],
+          lng: data['lng']
+        }
+      ).toPromise().catch(error => {
+        this.error = error;
+        origin = directionsForm.value['fromlocation'];
+      });
+    }
+    
+    var request = {
+      origin: origin,
+      destination: this.detailsObject.geometry.location,
+      travelMode: directionsForm.value['travel_mode'],
+      provideRouteAlternatives: true
+    };
+    console.log(request);
+    this.directionsService.route(request, (response, status) => {
+      if (status == google.maps.DirectionsStatus.OK) {
+        this.directionsDisplay.setDirections(response);
+      }
+    });
   }
 }
