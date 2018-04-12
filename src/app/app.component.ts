@@ -7,11 +7,38 @@ import { element } from 'protractor';
 import 'rxjs/add/operator/catch';
 import {Observable} from 'rxjs/Rx';
 import * as moment from 'moment';
+import { trigger, state, style, animate, transition } from '@angular/animations';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
+  animations: [
+    trigger('fadeIn', [
+      transition('yelp => *', [
+        style({opacity: 0}),
+        animate(500, style({opacity: 1}))
+      ]),
+      transition('google => *', [
+        style({opacity: 0}),
+        animate(1000, style({opacity: 1}))
+      ])
+    ]),
+    trigger('leftIn', [
+      state('in', style({transform: 'translateX(0)'})),
+      transition('* => in', [
+        style({transform: 'translateX(-100%)'}),
+        animate('500ms ease-in')
+      ])
+    ]),
+    trigger('rightIn', [
+      state('in', style({transform: 'translateX(0)'})),
+      transition('* => in', [
+        style({transform: 'translateX(+100%)'}),
+        animate(500)
+      ])
+    ])
+  ]
 })
 export class AppComponent implements OnInit{
   private itemPerPage = 20;
@@ -60,6 +87,8 @@ export class AppComponent implements OnInit{
   photos_col3 = [];
   reviewsDisplay = [];
 
+  placeIdDisplay = '';
+
   toLocationValue = '';
   travelMode = 'DRIVING';
   mapTabSelected = false;
@@ -69,6 +98,11 @@ export class AppComponent implements OnInit{
   fromLocationValue = '';
   directionsService;
   directionsDisplay;
+  twitterUrl;
+
+  reviewsIn;
+  detailsIn = "";
+  placesIn = "";
 
   noRecords = false;
   failedSearch = false;
@@ -247,6 +281,7 @@ export class AppComponent implements OnInit{
         this.detailsTab = false;
         this.failedSearch = false;
         this.mapTabSelected = false;
+        this.placesIn = "";
       },
       error => {
         this.error = error;
@@ -257,6 +292,7 @@ export class AppComponent implements OnInit{
         this.noRecords = false;
         this.failedSearch = true;
         this.mapTabSelected = false;
+        this.placesIn = "";
       }
     );
   }
@@ -298,6 +334,9 @@ export class AppComponent implements OnInit{
 
     this.noRecords = false;
     this.failedSearch = false;
+
+    this.placesIn = "";
+    this.detailsIn = "";
   }
 
   onPrevious() {
@@ -357,6 +396,7 @@ export class AppComponent implements OnInit{
     this.favoriteTable = false;
     this.detailsTab = false;
     this.mapTabSelected = false;
+    this.placesIn = "";
     if (this.placesDisplay.length == 0) {
       this.noRecords = true;
     }
@@ -371,6 +411,7 @@ export class AppComponent implements OnInit{
     this.favoriteTable = true;
     this.detailsTab = false;
     this.mapTabSelected = false;
+    this.placesIn = "";
     if (localStorage.favorite) {
       // it needs update only if the array favorites is empty.
       if (this.favorites.length == 0) {
@@ -494,18 +535,50 @@ export class AppComponent implements OnInit{
     return localStorage[id] || false;
   }
 
+  resultInDetails() {
+    if (this.placeIdDisplay != '') {
+      for (var i = 0; i < this.placesDisplay.length; ++i) {
+        if (this.placesDisplay[i].place_id == this.placeIdDisplay) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  favoriteInDetails() {
+    if (this.placeIdDisplay != '') {
+      for (var i = 0; i < this.favoritesDisplay.length; ++i) {
+        if (this.favoritesDisplay[i].place_id == this.placeIdDisplay) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   onDetails(id) {
     this.detailsTab = true;
+    this.detailsIn = 'in';
+    this.placesIn = "";
     this.changeDetector.detectChanges();
 
     var request = {
       placeId: id
     };
+    this.placeIdDisplay = '';
     var service = new google.maps.places.PlacesService(this.map);
     service.getDetails(request, (place, status) => {
       if (status == google.maps.places.PlacesServiceStatus.OK) {
         this.detailsObject = Object.assign({}, place);
         console.log(this.detailsObject);
+
+        this.placeIdDisplay = this.detailsObject.place_id;
+        this.twitterUrl = "https://twitter.com/intent/tweet?text="
+          + "Check out " + this.detailsObject.name
+          + " located at " + this.detailsObject.formatted_address
+          + ". Website:&url=" + this.detailsObject.website
+          + "&hashtags=TravelAndEntertainmentSearch";
         this.price_level = Array(this.detailsObject.price_level);
         this.star_rating = this.detailsObject.rating * 20 + "%";
         if (this.detailsObject.opening_hours) {
@@ -587,6 +660,7 @@ export class AppComponent implements OnInit{
           order: num++
         });
       });
+      this.reviewsIn = 'google';
     }
   }
 
@@ -613,10 +687,10 @@ export class AppComponent implements OnInit{
       + '&country=' + country
       + '&latitude=' + this.detailsObject.geometry.location.lat()
       + '&longtitude=' + this.detailsObject.geometry.location.lng();
-    this.reviewsDisplay = [];
     this.http.get(yelpUrl).subscribe(
       data => {
         var num = 0;
+        var yelpReviewsDisplay = [];
         data['reviews'].forEach((yelp) => {
           var review = {
             author_url: yelp.url,
@@ -626,13 +700,15 @@ export class AppComponent implements OnInit{
             rating: yelp.rating,
             time: moment(yelp.time_created).unix()
           };
-          this.reviewsDisplay.push({
+          yelpReviewsDisplay.push({
             review: review,
             time: yelp.time_created,
             rating: Array(yelp.rating),
             order: num++
           });
         });
+        this.reviewsDisplay = yelpReviewsDisplay;
+        this.reviewsIn = 'yelp';
       },
       error => this.error = error
     );
@@ -684,6 +760,8 @@ export class AppComponent implements OnInit{
   }
 
   onList() {
+    this.detailsIn = "";
+    this.placesIn = "in";
     this.detailsTab = false;
     this.mapTabSelected = false;
   }

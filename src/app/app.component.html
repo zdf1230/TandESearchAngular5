@@ -96,7 +96,10 @@
   </div>
 </div>
 
-<div class="main_border row" *ngIf="resultTable && !noRecords && !failedSearch && !detailsTab">
+<div [@rightIn]="placesIn" class="main_border" *ngIf="resultTable && !noRecords && !failedSearch && !detailsTab">
+  <div class="result_panel row">
+    <button type="button" class="btn btn-default button_border keep_right mb-1" (click)="onDetails(placeIdDisplay)" [disabled]="!resultInDetails()">Details <i class="fas fa-chevron-right"></i> </button>
+  </div>
   <table class="table table-hover table-responsive-sm result_panel">
     <thead>
       <tr>
@@ -109,7 +112,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let x of placesDisplay">
+      <tr *ngFor="let x of placesDisplay" [style.background-color]="placeIdDisplay == x.place_id ? 'rgb(247,220,158)' : ''">
         <td>{{x.number}}</td>
         <td><img class='category_icon' src={{x.icon}} /></td>
         <td>{{x.name}}</td>
@@ -129,7 +132,10 @@
   <button class="btn btn-default button_border" (click)="onNext()" *ngIf="haveNext"> Next </button>
 </div>
 
-<div class="main_border row" *ngIf="favoriteTable && !noRecords && !detailsTab">
+<div [@rightIn]="placesIn" class="main_border" *ngIf="favoriteTable && !noRecords && !detailsTab">
+  <div class="result_panel row">
+    <button type="button" class="btn btn-default button_border keep_right mb-1" (click)="onDetails(placeIdDisplay)" [disabled]="!favoriteInDetails()">Details <i class="fas fa-chevron-right"></i> </button>
+  </div>
   <table class="table table-hover table-responsive-sm result_panel">
     <thead>
       <tr>
@@ -142,7 +148,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let x of favoritesDisplay">
+      <tr *ngFor="let x of favoritesDisplay" [style.background-color]="placeIdDisplay == x.place_id ? 'rgb(247,220,158)' : ''">
         <td>{{x.number}}</td>
         <td><img class='category_icon' src={{x.icon}} /></td>
         <td>{{x.name}}</td>
@@ -159,15 +165,17 @@
   <button class="btn btn-default button_border" (click)="onFavoritesNext()" *ngIf="haveNextFavorites"> Next </button>
 </div>
 
-<div class="main_border result_panel" *ngIf="detailsTab">
+<div [@leftIn]="detailsIn" class="main_border result_panel" *ngIf="detailsTab">
   <h5> {{detailsObject.name}} </h5>
   <br>
   <div class="main_border row stay_left">
     <button class="btn btn-default button_border" (click)="onList()"><i class="fas fa-chevron-left"></i> List</button>
     <div class="keep_right">
-      <button class='btn btn-default button_border' (click)="onFavoriteStar(detailsObject.place_id, detailsObject)" *ngIf="!checkExists(detailsObject.place_id)"><i class="far fa-star"></i></button>
-      <button class='btn btn-default button_border' (click)="deleteFavoriteStar(detailsObject.place_id)" *ngIf="checkExists(detailsObject.place_id)"><i class="fas fa-star yellow_star"></i></button>
-      <button class='btn btn-default no_padding'><img class='icon' src='./assets/Twitter.png' /> </button>
+      <button class='btn btn-default button_border' (click)="onFavoriteStar(detailsObject.place_id, detailsObject)" *ngIf="!checkExists(detailsObject.place_id)" [disabled]="placeIdDisplay == ''"><i class="far fa-star"></i></button>
+      <button class='btn btn-default button_border' (click)="deleteFavoriteStar(detailsObject.place_id)" *ngIf="checkExists(detailsObject.place_id)" [disabled]="placeIdDisplay == ''"><i class="fas fa-star yellow_star"></i></button>
+      <button type="button" class='btn btn-default no_padding' [disabled]="placeIdDisplay == ''">
+        <a href={{twitterUrl}} [style.pointer-events]="placeIdDisplay == '' ? 'none' : 'auto'"><img class='icon' src='./assets/Twitter.png' /></a>
+      </button>
     </div>
   </div>
   
@@ -331,7 +339,7 @@
         </div>
       </div>
       <br>
-      <table class="table review_table">
+      <table [@fadeIn]="reviewsIn" class="table review_table">
         <tbody>
           <tr *ngFor="let x of reviewsDisplay">
             <td>
