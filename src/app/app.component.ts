@@ -35,7 +35,7 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
       state('in', style({transform: 'translateX(0)'})),
       transition('* => in', [
         style({transform: 'translateX(+100%)'}),
-        animate(500)
+        animate('500ms ease-in')
       ])
     ])
   ]
@@ -56,6 +56,7 @@ export class AppComponent implements OnInit{
 
   from = 'current';
   category = 'default';
+  distance = '';
   locationValue = '';
   places = [];
   placesDisplay = [];
@@ -88,6 +89,7 @@ export class AppComponent implements OnInit{
   reviewsDisplay = [];
 
   placeIdDisplay = '';
+  progrossBar = false;
 
   toLocationValue = '';
   travelMode = 'DRIVING';
@@ -95,7 +97,9 @@ export class AppComponent implements OnInit{
   map;
   pegman;
   panorama;
+  marker;
   fromLocationValue = '';
+  fromLocationPlaceHolder;
   directionsService;
   directionsDisplay;
   twitterUrl;
@@ -112,7 +116,6 @@ export class AppComponent implements OnInit{
 
   @ViewChild("keyword") keyword;
   @ViewChild("location") location;
-  @ViewChild("distance") distance;
   @ViewChild("mapsTab") mapsTab;
   @ViewChild("fromlocation") fromlocation;
   @ViewChild("directionsPanel") directionsPanel;
@@ -163,7 +166,19 @@ export class AppComponent implements OnInit{
     });
   }
 
-  onKeyword(value) {
+  // listen ng-touched
+  blurKeyword(value) {
+    setTimeout(() => {
+      var touched = this.keyword.nativeElement.classList.contains('ng-touched');
+      if (value == '' && touched) {
+        this.renderer.addClass(this.keyword.nativeElement, "is-invalid");
+        this.keywordStatus = false;
+        this.checkSearchButtonStatus();
+      }
+    }, 10);
+  }
+
+  onKeyword(value, touched) {
     if (!this.checkValdation(value)) {
       this.renderer.addClass(this.keyword.nativeElement, "is-invalid");
       this.keywordStatus = false;
@@ -174,6 +189,17 @@ export class AppComponent implements OnInit{
       this.keywordStatus = true;
       this.checkSearchButtonStatus();
     }
+  }
+
+  blurLocation(value) {
+    setTimeout(() => {
+      var touched = this.location.nativeElement.classList.contains('ng-touched');
+      if (value == '' && touched) {
+        this.renderer.addClass(this.location.nativeElement, "is-invalid");
+        this.locationValidStatus = false;
+        this.checkSearchButtonStatus();
+      }
+    }, 10);
   }
 
   onLocation(value) {
@@ -224,6 +250,13 @@ export class AppComponent implements OnInit{
   }
 
   async requestPlaces (searchForm : NgForm) {
+    this.noRecords = false;
+    this.failedSearch = false;
+    this.detailsTab = false;
+    this.mapTabSelected = false;
+    this.favoriteTable = false;
+    this.resultTable = false;
+    this.progrossBar = true;
     this.searchLocation = this.currentLocation;
     if (searchForm.value["from"] == "other") {
       var locationUrl = this.serverUrl + 'location?location=' + searchForm.value['location'];
@@ -271,17 +304,14 @@ export class AppComponent implements OnInit{
           this.haveNext = false;
         }
         this.resultTable = true;
-        this.favoriteTable = false;
         if (this.placesDisplay.length == 0) {
           this.noRecords = true;
         }
         else {
           this.noRecords = false;
         }
-        this.detailsTab = false;
-        this.failedSearch = false;
-        this.mapTabSelected = false;
         this.placesIn = "";
+        this.progrossBar = false;
       },
       error => {
         this.error = error;
@@ -293,11 +323,14 @@ export class AppComponent implements OnInit{
         this.failedSearch = true;
         this.mapTabSelected = false;
         this.placesIn = "";
+        this.progrossBar = false;
       }
     );
   }
 
-  onClear() {
+  onClear(searchForm : NgForm) {
+    //searchForm.reset();
+
     this.keywordStatus = false;
     this.searchButtonStatus = false;
     this.locationStatus = false;
@@ -305,6 +338,7 @@ export class AppComponent implements OnInit{
 
     this.from = 'current';
     this.category = 'default';
+    this.distance = '';
     this.locationValue = '';
     this.places = [];
     this.placesDisplay = [];
@@ -330,7 +364,6 @@ export class AppComponent implements OnInit{
 
     this.keyword.nativeElement.value = '';
     this.location.nativeElement.value = '';
-    this.distance.nativeElement.value = '';
 
     this.noRecords = false;
     this.failedSearch = false;
@@ -535,28 +568,6 @@ export class AppComponent implements OnInit{
     return localStorage[id] || false;
   }
 
-  resultInDetails() {
-    if (this.placeIdDisplay != '') {
-      for (var i = 0; i < this.placesDisplay.length; ++i) {
-        if (this.placesDisplay[i].place_id == this.placeIdDisplay) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  favoriteInDetails() {
-    if (this.placeIdDisplay != '') {
-      for (var i = 0; i < this.favoritesDisplay.length; ++i) {
-        if (this.favoritesDisplay[i].place_id == this.placeIdDisplay) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
   onDetails(id) {
     this.detailsTab = true;
     this.detailsIn = 'in';
@@ -646,6 +657,7 @@ export class AppComponent implements OnInit{
   }
 
   onGoogleReviews() {
+    this.noRecords = false;
     this.reviewsDropdown.nativeElement.innerText = "Google Reviews";
     this.reviewsDisplay = [];
     if (this.detailsObject.reviews) {
@@ -662,9 +674,13 @@ export class AppComponent implements OnInit{
       });
       this.reviewsIn = 'google';
     }
+    else {
+      this.noRecords = true;
+    }
   }
 
   onYelpReviews() {
+    this.noRecords = false;
     this.reviewsDropdown.nativeElement.innerText = "Yelp Reviews";
     var city;
     var state;
@@ -680,8 +696,10 @@ export class AppComponent implements OnInit{
         country = addr.short_name;
       }
     });
-    var yelpUrl = this.serverUrl + 'yelpreviews?name=' + this.detailsObject.name
-      + '&address1=' + this.detailsObject.formatted_address
+    var name = this.detailsObject.name.length >= 64 ? this.detailsObject.name.substr(64) : this.detailsObject.name;
+    var address = this.detailsObject.formatted_address.length >= 64 ? this.detailsObject.name.substr(64) : this.detailsObject.formatted_address;
+    var yelpUrl = this.serverUrl + 'yelpreviews?name=' + name
+      + '&address1=' + address
       + '&city=' + city
       + '&state=' + state
       + '&country=' + country
@@ -691,22 +709,28 @@ export class AppComponent implements OnInit{
       data => {
         var num = 0;
         var yelpReviewsDisplay = [];
-        data['reviews'].forEach((yelp) => {
-          var review = {
-            author_url: yelp.url,
-            image_url: yelp.user.image_url,
-            author_name: yelp.user.name,
-            text: yelp.text,
-            rating: yelp.rating,
-            time: moment(yelp.time_created).unix()
-          };
-          yelpReviewsDisplay.push({
-            review: review,
-            time: yelp.time_created,
-            rating: Array(yelp.rating),
-            order: num++
+        if (data != null && data['reviews'] != null) {
+          console.log(data['reviews']);
+          data['reviews'].forEach((yelp) => {
+            var review = {
+              author_url: yelp.url,
+              image_url: yelp.user.image_url,
+              author_name: yelp.user.name,
+              text: yelp.text,
+              rating: yelp.rating,
+              time: moment(yelp.time_created).unix()
+            };
+            yelpReviewsDisplay.push({
+              review: review,
+              time: yelp.time_created,
+              rating: Array(yelp.rating),
+              order: num++
+            });
           });
-        });
+        }
+        else {
+          this.noRecords = true;
+        }
         this.reviewsDisplay = yelpReviewsDisplay;
         this.reviewsIn = 'yelp';
       },
@@ -762,11 +786,13 @@ export class AppComponent implements OnInit{
   onList() {
     this.detailsIn = "";
     this.placesIn = "in";
+    this.noRecords = false;
     this.detailsTab = false;
     this.mapTabSelected = false;
   }
 
-  onMapTab() {
+  onSelectMap() {
+    this.noRecords = false;
     this.pegman = true;
     this.mapTabSelected = true;
     this.changeDetector.detectChanges();
@@ -776,12 +802,15 @@ export class AppComponent implements OnInit{
     // clear map first
     this.directionsDisplay.setMap(null);
     this.directionsDisplay.setPanel(null);
-
+    
     this.map.setCenter(this.detailsObject.geometry.location);
-    var marker = new google.maps.Marker({
+    if (this.marker) {
+      this.marker.setMap(null);
+    }
+    this.marker = new google.maps.Marker({
       position: this.detailsObject.geometry.location
     });
-    marker.setMap(this.map);
+    this.marker.setMap(this.map);
     this.panorama = this.map.getStreetView();
     this.panorama.setPosition(this.detailsObject.geometry.location);
     this.panorama.setOptions({
@@ -801,6 +830,14 @@ export class AppComponent implements OnInit{
         this.fromLocationValue = place.formatted_address;
       });
     });
+
+    if (this.from == "current") {
+      this.fromLocationPlaceHolder = "Your location";
+    }
+    else {
+      this.fromLocationPlaceHolder = this.locationValue;
+    }
+    
   }
 
   onPegmanIcon() {
@@ -818,11 +855,12 @@ export class AppComponent implements OnInit{
   }
 
   async onGetDirections(directionsForm : NgForm) {
+    this.marker.setMap(null);
     this.directionsDisplay.setMap(this.map);
     this.directionsDisplay.setPanel(this.directionsPanel.nativeElement);
     var origin;
-    if (directionsForm.value['fromlocation'] == '') {
-      origin = this.currentLocation;
+    if (directionsForm.value['fromlocation'] == '' || directionsForm.value['fromlocation'] == "My location") {
+      origin = this.searchLocation;
     }
     else {
       var locationUrl = this.serverUrl + 'location?location=' + directionsForm.value['fromlocation'];
@@ -849,6 +887,31 @@ export class AppComponent implements OnInit{
         this.directionsDisplay.setDirections(response);
       }
     });
+  }
+
+  onSelectInfo() {
+    this.mapTabSelected = false;
+    this.noRecords = false;
+  }
+
+  onSelectPhotos() {
+    this.mapTabSelected = false;
+    if (this.detailsObject.photos) {
+      this.noRecords = false;
+    }
+    else {
+      this.noRecords = true;
+    }
+  }
+
+  onSelectReviews() {
+    this.mapTabSelected = false;
+    if (this.reviewsDisplay.length > 0) {
+      this.noRecords = false;
+    }
+    else {
+      this.noRecords = true;
+    }
   }
 
   imgError(image){

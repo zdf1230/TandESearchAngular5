@@ -23,6 +23,10 @@ legend {
     white-space: nowrap;
 }
 
+.keep_left {
+    text-align: left;
+}
+
 .search_panel {
     width: 90%;
     margin: auto;
@@ -137,8 +141,8 @@ legend {
 }
 
 .profile_icon {
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
 }
 
 .review_table {

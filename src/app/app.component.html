@@ -6,7 +6,7 @@
         <span class="col-0 col-sm-1"></span>
         <label for="keyword" class="col-sm-3 col-form-label">Keyword<span class="red_star">*</span></label>
         <div class="col-sm-7">
-          <input #keyword type="text" class="form-control" name="keyword" ngModel (keyup)="onKeyword(keyword.value)">
+          <input #keyword type="text" class="form-control" name="keyword" ngModel (keyup)="onKeyword(keyword.value)" (blur)="blurKeyword(keyword.value)">
           <div class="invalid-feedback stay_left">
             Please enter a keyword.
           </div>
@@ -53,7 +53,7 @@
         <span class="col-0 col-sm-1"></span>
         <label for="distance" class="col-sm-3 col-form-label">Distance (Miles)</label>
         <div class="col-sm-5">
-          <input #distance type="text" class="form-control" id="distance" placeholder="10" name="distance" ngModel>
+          <input type="text" class="form-control" id="distance" placeholder="10" name="distance" [(ngModel)]="distance">
         </div>
       </div>
       <fieldset class="form-group">
@@ -69,7 +69,7 @@
               <input class="form-check-input" type="radio" id="other_radio" name="from" value="other" (click)="undisableLocation()" [(ngModel)]="from"/>
               <div class="form-group">
                 <label class="form-check-label" for="other_radio">Other. Please specify:</label>
-                <input #location type="text" class="form-control" id="from" placeholder="Enter a Location" (keyup)="onLocation(location.value)" [disabled]="!locationStatus" name="location" [(ngModel)]="locationValue">
+                <input #location type="text" class="form-control" id="from" placeholder="Enter a Location" (keyup)="onLocation(location.value)" (blur)="blurLocation(location.value)" [disabled]="!locationStatus" name="location" [(ngModel)]="locationValue">
                 <div class="invalid-feedback stay_left">
                     Please enter a location.
                 </div>
@@ -82,7 +82,7 @@
         <span class="col-0 col-sm-1"></span>
         <div class="col-sm-3 stay_left">
           <button type="button" class="btn btn-primary button_border" (click)="requestPlaces(searchForm)" [disabled]="!searchButtonStatus"><i class="fas fa-search"></i> Search</button>
-          <button type="button" class="btn button_border" (click)="onClear()">Clear</button>
+          <button type="button" class="btn button_border" (click)="onClear(searchForm)">Clear</button>
         </div>
       </div>
     </form>
@@ -98,7 +98,7 @@
 
 <div [@rightIn]="placesIn" class="main_border" *ngIf="resultTable && !noRecords && !failedSearch && !detailsTab">
   <div class="result_panel row">
-    <button type="button" class="btn btn-default button_border keep_right mb-1" (click)="onDetails(placeIdDisplay)" [disabled]="!resultInDetails()">Details <i class="fas fa-chevron-right"></i> </button>
+    <button type="button" class="btn btn-default button_border keep_right mb-1" (click)="onDetails(placeIdDisplay)" [disabled]="placeIdDisplay == ''">Details <i class="fas fa-chevron-right"></i> </button>
   </div>
   <table class="table table-hover table-responsive-sm result_panel">
     <thead>
@@ -112,7 +112,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let x of placesDisplay" [style.background-color]="placeIdDisplay == x.place_id ? 'rgb(247,220,158)' : ''">
+      <tr *ngFor="let x of placesDisplay" [class.table-warning]="placeIdDisplay == x.place_id">
         <td>{{x.number}}</td>
         <td><img class='category_icon' src={{x.icon}} /></td>
         <td>{{x.name}}</td>
@@ -134,7 +134,7 @@
 
 <div [@rightIn]="placesIn" class="main_border" *ngIf="favoriteTable && !noRecords && !detailsTab">
   <div class="result_panel row">
-    <button type="button" class="btn btn-default button_border keep_right mb-1" (click)="onDetails(placeIdDisplay)" [disabled]="!favoriteInDetails()">Details <i class="fas fa-chevron-right"></i> </button>
+    <button type="button" class="btn btn-default button_border keep_right mb-1" (click)="onDetails(placeIdDisplay)" [disabled]="placeIdDisplay == ''">Details <i class="fas fa-chevron-right"></i> </button>
   </div>
   <table class="table table-hover table-responsive-sm result_panel">
     <thead>
@@ -148,7 +148,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let x of favoritesDisplay" [style.background-color]="placeIdDisplay == x.place_id ? 'rgb(247,220,158)' : ''">
+      <tr *ngFor="let x of favoritesDisplay" [class.table-warning]="placeIdDisplay == x.place_id">
         <td>{{x.number}}</td>
         <td><img class='category_icon' src={{x.icon}} /></td>
         <td>{{x.name}}</td>
@@ -163,6 +163,12 @@
   <button class="btn btn-default button_border" (click)="onFavoritesPrevious()" *ngIf="havePreviousFavorites"> Previous </button>
   <span>&nbsp;&nbsp;&nbsp;</span>
   <button class="btn btn-default button_border" (click)="onFavoritesNext()" *ngIf="haveNextFavorites"> Next </button>
+</div>
+
+<div class="result_panel" *ngIf="progrossBar">
+  <br> <br> <br>
+  <progressbar [value]="50" [striped]="true" [animate]="true"></progressbar>
+  <br> <br> <br>
 </div>
 
 <div [@leftIn]="detailsIn" class="main_border result_panel" *ngIf="detailsTab">
@@ -180,9 +186,9 @@
   </div>
   
   <tabset>
-    <tab heading="Info" customClass="tab" (select)="mapTabSelected = false;">
+    <tab heading="Info" customClass="tab" (select)="onSelectInfo()">
       <br>
-      <table class="table table-striped table-responsive-sm stay_left">
+      <table class="table table-striped table-responsive-sm keep_left">
         <tr *ngIf="detailsObject.formatted_address">
           <th> Address </th>
           <td> {{detailsObject.formatted_address}} </td>
@@ -226,7 +232,7 @@
         </tr>
       </table>
     </tab>
-    <tab heading="Photos" customClass="tab" (select)="mapTabSelected = false;"> 
+    <tab heading="Photos" customClass="tab" (select)="onSelectPhotos()"> 
       <br>
       <div class="card-columns">
         <div class="card" *ngFor="let x of photos">
@@ -276,13 +282,13 @@
         </div>
       </div>
     </tab>
-    <tab heading="Map" customClass="tab" (select)="onMapTab()">
+    <tab heading="Map" customClass="tab" (select)="onSelectMap()">
       <br>
       <form #directionsForm="ngForm">
         <div class="form-row">
           <div class="col-sm-4 stay_left mb-3">
             <label for="from_location">From</label>
-            <input #fromlocation type="text" class="form-control" id="from_location" name="fromlocation" placeholder="Your location" [(ngModel)]="fromLocationValue">
+            <input #fromlocation type="text" class="form-control" id="from_location" name="fromlocation" placeholder={{fromLocationPlaceHolder}} [(ngModel)]="fromLocationValue">
           </div>
           <div class="col-sm-4 stay_left mb-3">
             <label for="to_location">To</label>
@@ -299,7 +305,7 @@
           </div>
           <div class="col-auto keep_center mb-3">
             <label for="get_directions">&nbsp;</label>
-            <button type="button" id="get_directions" class="form-control btn btn-primary" (click)="onGetDirections(directionsForm)"> Get Directions</button>
+            <button type="button" id="get_directions" class="btn btn-primary" (click)="onGetDirections(directionsForm)"> Get Directions</button>
           </div>
         </div>
       </form>
@@ -312,7 +318,7 @@
         </button>
       </div>
     </tab>
-    <tab heading="Reviews" customClass="tab" (select)="mapTabSelected = false;">
+    <tab heading="Reviews" customClass="tab" (select)="onSelectReviews()">
       <br>
       <div class="row no_margin">
         <div class="btn-group" dropdown>
