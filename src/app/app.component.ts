@@ -179,7 +179,7 @@ export class AppComponent implements OnInit{
   }
 
   onKeyword(value, touched) {
-    if (!this.checkValdation(value)) {
+    if (!this.checkValidation(value)) {
       this.renderer.addClass(this.keyword.nativeElement, "is-invalid");
       this.keywordStatus = false;
       this.checkSearchButtonStatus();
@@ -203,7 +203,7 @@ export class AppComponent implements OnInit{
   }
 
   onLocation(value) {
-    if (!this.checkValdation(value)) {
+    if (!this.checkValidation(value)) {
       this.renderer.addClass(this.location.nativeElement, "is-invalid");
       this.locationValidStatus = false;
       this.checkSearchButtonStatus();
@@ -228,7 +228,7 @@ export class AppComponent implements OnInit{
     this.checkSearchButtonStatus();
   }
 
-  private checkValdation(value) {
+  private checkValidation(value) {
     if (value == null) {
       return true;
     }
@@ -860,7 +860,13 @@ export class AppComponent implements OnInit{
     this.directionsDisplay.setPanel(this.directionsPanel.nativeElement);
     var origin;
     if (directionsForm.value['fromlocation'] == '' || directionsForm.value['fromlocation'] == "My location") {
-      origin = this.searchLocation;
+      // for didn't click search button case
+      if (this.searchLocation) {
+        origin = this.searchLocation;
+      }
+      else {
+        origin = this.currentLocation;
+      }
     }
     else {
       var locationUrl = this.serverUrl + 'location?location=' + directionsForm.value['fromlocation'];
