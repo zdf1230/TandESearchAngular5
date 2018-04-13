@@ -43,7 +43,7 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
 export class AppComponent implements OnInit{
   private itemPerPage = 20;
   private ipApiUrl = 'http://ip-api.com/json';
-  private serverUrl = 'http://localhost:3000/';
+  private serverUrl = 'http://tandesearch.us-east-2.elasticbeanstalk.com/';
   error;
   currentLocation;
   searchLocation;
