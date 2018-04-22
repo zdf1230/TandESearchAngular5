@@ -385,7 +385,12 @@ export class AppComponent implements OnInit{
       this.havePrevious = true;
       this.placesDisplay = this.places[++this.placesDisplayIndex];
       if (this.placesDisplayIndex == this.places.length - 1) {
-        this.haveNext = false;
+        if (this.next_page_token == '') {
+          this.haveNext = false;
+        }
+        else {
+          this.haveNext = true;
+        }
       }
     }
     else {
